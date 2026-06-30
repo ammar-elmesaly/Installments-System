@@ -9,6 +9,8 @@ import { ClientsModule } from './clients/clients.module';
 import { Client } from './clients/client.entity';
 import { AdminsModule } from './admins/admins.module';
 import { Admin } from './admins/admin.entity';
+import { AccountsModule } from './accounts/accounts.module';
+import { Account } from './accounts/account.entity';
 
 @Module({
   imports: [
@@ -24,12 +26,14 @@ import { Admin } from './admins/admin.entity';
       entities: [
         Person,
         Client,
-        Admin
+        Admin,
+        Account
       ]
     }),
     PeopleModule,
     ClientsModule,
-    AdminsModule
+    AdminsModule,
+    AccountsModule
   ],
   controllers: [AppController],
   providers: [AppService],

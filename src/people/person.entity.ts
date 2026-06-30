@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 import { Client } from "../clients/client.entity";
 import { Admin } from "../admins/admin.entity";
+import { Account } from "../accounts/account.entity";
 
 @Unique('UQ_full_name', ['first_name', 'second_name', 'third_name', 'last_name'])
 @Entity('people')
@@ -49,4 +50,10 @@ export abstract class Person {
     admin => admin.person
   )
   admin: Admin;
+
+  @OneToOne(
+    () => Account,
+    account => account.person
+  )
+  account: Account;
 }

@@ -1,18 +1,24 @@
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Person } from "../people/person.entity";
-import { AdminLevel } from "./enums/adminLevel.enum";
+import { Role } from "./enums/role";
 
-@Entity('admins')
-export class Admin {
+@Entity('accounts')
+export class Account {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'enum', enum: AdminLevel, default: AdminLevel.Auditor })
-  admin_level: AdminLevel;
+  @Column({ type: 'varchar', length: 255, unique: true })
+  email: string;
+
+  @Column({ type: 'varchar' })
+  password_hash: string;
+
+  @Column({ type: 'enum', enum: Role })
+  role: Role;
 
   @OneToOne(
     () => Person,
-    person => person.admin,
+    person => person.account,
     { nullable: false, onDelete: 'CASCADE' }
   )
   @JoinColumn({ name: 'person_id' })
