@@ -3,9 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { PeopleController } from './people/people.controller';
 import { PeopleModule } from './people/people.module';
-import { Person } from './people/people.entity';
+import { Person } from './people/person.entity';
+import { ClientsModule } from './clients/clients.module';
+import { Client } from './clients/client.entity';
 
 @Module({
   imports: [
@@ -19,10 +20,12 @@ import { Person } from './people/people.entity';
       database: String(process.env.DB_NAME),
       synchronize: process.env.NODE_ENV !== 'production',
       entities: [
-        Person
+        Person,
+        Client
       ]
     }),
-    PeopleModule
+    PeopleModule,
+    ClientsModule
   ],
   controllers: [AppController],
   providers: [AppService],

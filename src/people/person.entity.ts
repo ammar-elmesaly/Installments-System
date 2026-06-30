@@ -1,8 +1,9 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
+import { Client } from "../clients/client.entity";
 
 @Unique('UQ_full_name', ['first_name', 'second_name', 'third_name', 'last_name'])
 @Entity('people')
-export class Person {
+export abstract class Person {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -18,7 +19,7 @@ export class Person {
   @Column({ type: 'varchar', length: 100 })
   last_name: string;
 
-  @Column({ type: 'char', length: 11 })
+  @Column({ type: 'char', length: 11, unique: true })
   phone_number: string;
 
   @Column({ type: 'varchar', length: '150', nullable: true })
@@ -35,4 +36,10 @@ export class Person {
 
   @UpdateDateColumn({ type: 'timestamptz', nullable: true })
   updated_at?: Date;
+
+  @OneToOne(
+    () => Client,
+    client => client.person
+  )
+  client: Client;
 }
