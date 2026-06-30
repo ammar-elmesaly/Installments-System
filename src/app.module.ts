@@ -7,6 +7,8 @@ import { PeopleModule } from './people/people.module';
 import { Person } from './people/person.entity';
 import { ClientsModule } from './clients/clients.module';
 import { Client } from './clients/client.entity';
+import { AdminsModule } from './admins/admins.module';
+import { Admin } from './admins/admin.entity';
 
 @Module({
   imports: [
@@ -21,11 +23,13 @@ import { Client } from './clients/client.entity';
       synchronize: process.env.NODE_ENV !== 'production',
       entities: [
         Person,
-        Client
+        Client,
+        Admin
       ]
     }),
     PeopleModule,
-    ClientsModule
+    ClientsModule,
+    AdminsModule
   ],
   controllers: [AppController],
   providers: [AppService],
