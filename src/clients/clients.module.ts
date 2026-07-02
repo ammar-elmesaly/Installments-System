@@ -11,6 +11,7 @@ import { Client } from './client.entity';
     PeopleModule
   ],
   controllers: [ClientsController],
-  providers: [ClientsService]
+  providers: [ClientsService],
+  exports: [ClientsService]
 })
 export class ClientsModule {}

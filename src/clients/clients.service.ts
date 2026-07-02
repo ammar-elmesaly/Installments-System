@@ -6,6 +6,7 @@ import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PeopleService } from '../people/people.service';
 import { Person } from '../people/person.entity';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { QueryRunner } from 'typeorm';
 
 @Injectable()
 export class ClientsService {
@@ -28,10 +29,16 @@ export class ClientsService {
     return client;
   }
 
-  async create(createClientDto: CreateClientDTO): Promise<Client> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  async create(
+    createClientDto: CreateClientDTO,
+    queryRunner: QueryRunner = this.dataSource.createQueryRunner()
+  ): Promise<Client> {
+    const isLocalRunner = !queryRunner.isTransactionActive;
+
+    if (isLocalRunner) {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+    }
 
     try {
       await this.peopleService.validateUniqueIdentifiers(
@@ -48,14 +55,20 @@ export class ClientsService {
       const client = queryRunner.manager.create(Client, { person });
       const savedClient = await queryRunner.manager.save(client);
 
-      await queryRunner.commitTransaction();
+      if (isLocalRunner) {
+        await queryRunner.commitTransaction();
+      }
       return savedClient;
 
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      if (isLocalRunner) {
+        await queryRunner.rollbackTransaction();
+      }
       throw error;
     } finally {
-      await queryRunner.release();
+      if (isLocalRunner) {
+        await queryRunner.release();
+      }
     }
   }
 
@@ -98,7 +111,7 @@ export class ClientsService {
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
-      queryRunner.release();
+      await queryRunner.release();
     }
   } 
 

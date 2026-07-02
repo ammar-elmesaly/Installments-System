@@ -6,7 +6,7 @@ import { ClientStatus } from "./enums/clientStatus.enum";
 export class Client {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
+  
   @Column({ type: 'numeric', precision: 12, scale: 2, default: 0 })
   total_paid_cash: number;
 

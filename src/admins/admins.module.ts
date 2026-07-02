@@ -11,6 +11,7 @@ import { PeopleModule } from '../people/people.module';
     PeopleModule
   ],
   controllers: [AdminsController],
-  providers: [AdminsService]
+  providers: [AdminsService],
+  exports: [AdminsService]
 })
 export class AdminsModule {}

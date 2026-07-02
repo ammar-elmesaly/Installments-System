@@ -27,11 +27,6 @@ export class AdminsController {
     return this.adminsService.findById(id);
   }
   
-  @Post('new')
-  create(@Body() createAdminDTO: CreateAdminDTO) {
-    return this.adminsService.create(createAdminDTO);
-  }
-
   @Put('update/:id')
   updateById(@Param('id', ParseUUIDPipe) id: string, @Body() updateAdminDTO: UpdateAdminDTO) {
     return this.adminsService.updateById(id, updateAdminDTO);

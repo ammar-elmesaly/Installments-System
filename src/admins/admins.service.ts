@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Admin } from './admin.entity';
 import { CreateAdminDTO, UpdateAdminDTO } from './dto/admin.dto';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, QueryRunner, Repository } from 'typeorm';
 import { PeopleService } from '../people/people.service';
 import { Person } from '../people/person.entity';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
@@ -28,11 +28,17 @@ export class AdminsService {
     return admin;
   }
 
-  async create(createAdminDTO: CreateAdminDTO): Promise<Admin> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  async create(
+    createAdminDTO: CreateAdminDTO,
+    queryRunner: QueryRunner = this.dataSource.createQueryRunner()
+  ): Promise<Admin> {
+    const isLocalRunner = !queryRunner.isTransactionActive;
 
+    if (isLocalRunner) {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+    }
+    
     try {
       await this.peopleService.validateUniqueIdentifiers(
         createAdminDTO.first_name,
@@ -48,14 +54,20 @@ export class AdminsService {
       const admin = queryRunner.manager.create(Admin, { person });
       const savedAdmin = await queryRunner.manager.save(admin);
 
-      await queryRunner.commitTransaction();
+      if (isLocalRunner) {
+        await queryRunner.commitTransaction();
+      }
       return savedAdmin;
 
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      if (isLocalRunner) {
+        await queryRunner.rollbackTransaction();
+      }
       throw error;
     } finally {
-      await queryRunner.release();
+      if (isLocalRunner) {
+        await queryRunner.release();
+      }
     }
   }
 
@@ -98,7 +110,7 @@ export class AdminsService {
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
-      queryRunner.release();
+      await queryRunner.release();
     }
   } 
 
