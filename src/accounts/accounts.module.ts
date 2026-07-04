@@ -13,6 +13,7 @@ import { ClientsModule } from '../clients/clients.module';
     ClientsModule
   ],
   controllers: [AccountsController],
-  providers: [AccountsService]
+  providers: [AccountsService],
+  exports: [AccountsService]
 })
 export class AccountsModule {}

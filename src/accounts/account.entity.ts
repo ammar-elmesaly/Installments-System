@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Person } from "../people/person.entity";
 import { Role } from "./enums/role";
+import { Exclude } from "class-transformer";
 
 @Entity('accounts')
 export class Account {
@@ -11,6 +12,7 @@ export class Account {
   email: string;
 
   @Column({ type: 'varchar' })
+  @Exclude()
   password_hash: string;
 
   @Column({ type: 'enum', enum: Role })

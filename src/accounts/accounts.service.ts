@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from './account.entity';
 import { Repository } from 'typeorm';
 import { CreateAdminAccountDTO, CreateClientAccountDTO } from './dto/account.dto';
 import { AdminsService } from '../admins/admins.service';
 import { ClientsService } from '../clients/clients.service';
-import { Role } from './enums/role';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { LoginDTO } from '../auth/dto/login.dto';
 
 @Injectable()
 export class AccountsService {
@@ -30,6 +30,16 @@ export class AccountsService {
     await queryRunner.startTransaction();
 
     try {
+      const duplicateAccount = await this.accountRepository.findOne({
+        where: {
+          email: createAccountDTO.email
+        }
+      })
+
+      if (duplicateAccount) {
+        throw new ConflictException('An account with this email already exists.');
+      }
+
       const admin = await this.adminsService.create(createAccountDTO, queryRunner);
       const account = queryRunner.manager.create(Account);
 
@@ -41,6 +51,8 @@ export class AccountsService {
       const savedAccount = await queryRunner.manager.save(account);
       await queryRunner.commitTransaction();
 
+      delete savedAccount.password_hash;
+      
       return savedAccount;
 
     } catch (error) {
@@ -76,5 +88,13 @@ export class AccountsService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async findByEmail(loginDTO: LoginDTO): Promise<Account> {
+    const account = this.accountRepository.findOneBy({ email: loginDTO.email });
+    if (!account) {
+      throw new NotFoundException(`No Account with this email was found`);
+    }
+    return account;
   }
 }

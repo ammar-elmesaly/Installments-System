@@ -11,6 +11,7 @@ import { AdminsModule } from './admins/admins.module';
 import { Admin } from './admins/admin.entity';
 import { AccountsModule } from './accounts/accounts.module';
 import { Account } from './accounts/account.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { Account } from './accounts/account.entity';
     PeopleModule,
     ClientsModule,
     AdminsModule,
-    AccountsModule
+    AccountsModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -15,8 +15,12 @@ export class PeopleService {
     return this.peopleRepository.find();
   }
   
-  findById(id: string): Promise<Person> {
-    return this.peopleRepository.findOneBy({ id });
+  async findById(id: string): Promise<Person> {
+    const person = await this.peopleRepository.findOneBy({ id });
+    if (!person) {
+      throw new NotFoundException(`Person with ID ${id} not found`);
+    }
+    return person;
   }
 
   async create(
