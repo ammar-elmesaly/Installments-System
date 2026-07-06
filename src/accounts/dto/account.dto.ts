@@ -29,10 +29,6 @@ export class CreateClientAccountDTO extends CreateClientDTO {
   @Matches(PASSWORD_REGEX, { message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.' } )
   readonly password: string;
 
-  @IsNotEmpty()
-  @IsEnum(Role)
-  readonly role: Role = Role.Client;
-
   @IsOptional()
   @IsUUID()
   readonly person_id: string;
@@ -46,10 +42,6 @@ export class CreateAdminAccountDTO extends CreateAdminDTO {
   @IsNotEmpty()
   @Matches(PASSWORD_REGEX, { message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.' } )
   readonly password: string;
-
-  @IsNotEmpty()
-  @IsEnum(Role)
-  readonly role: Role = Role.Admin;
 }
 
 

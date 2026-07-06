@@ -12,6 +12,8 @@ import { Admin } from './admins/admin.entity';
 import { AccountsModule } from './accounts/accounts.module';
 import { Account } from './accounts/account.entity';
 import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtGuard } from './auth/jwt.guard';
 
 @Module({
   imports: [
@@ -31,6 +33,9 @@ import { AuthModule } from './auth/auth.module';
         Account
       ]
     }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     PeopleModule,
     ClientsModule,
     AdminsModule,
@@ -38,7 +43,13 @@ import { AuthModule } from './auth/auth.module';
     AuthModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtGuard,
+    },
+  ],
 })
 export class AppModule {}
 

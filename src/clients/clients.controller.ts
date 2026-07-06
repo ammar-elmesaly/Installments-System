@@ -1,8 +1,9 @@
-import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, ParseUUIDPipe, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
 import { ClientsService } from './clients.service';
 import { CreateClientDTO, UpdateClientDTO } from './dto/client.dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { Client } from './client.entity';
+import { JwtGuard } from '../auth/jwt.guard';
 
 @Controller('clients')
 export class ClientsController {

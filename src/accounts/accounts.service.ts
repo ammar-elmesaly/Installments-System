@@ -8,6 +8,8 @@ import { ClientsService } from '../clients/clients.service';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { LoginDTO } from '../auth/dto/login.dto';
+import { Admin } from '../admins/admin.entity';
+import { Role } from './enums/role';
 
 @Injectable()
 export class AccountsService {
@@ -45,7 +47,7 @@ export class AccountsService {
 
       account.person = admin.person;
       account.email = createAccountDTO.email;
-      account.role = createAccountDTO.role;
+      account.role = Role.Admin;
       account.password_hash = await bcrypt.hash(createAccountDTO.password, 12);
 
       const savedAccount = await queryRunner.manager.save(account);
@@ -74,12 +76,14 @@ export class AccountsService {
 
       account.person = client.person;
       account.email = createAccountDTO.email;
-      account.role = createAccountDTO.role;
+      account.role = Role.Client;
       account.password_hash = await bcrypt.hash(createAccountDTO.password, 12);
 
       const savedAccount = await queryRunner.manager.save(account);
       await queryRunner.commitTransaction();
-
+      
+      delete savedAccount.password_hash;
+      
       return savedAccount;
 
     } catch (error) {
@@ -91,10 +95,27 @@ export class AccountsService {
   }
 
   async findByEmail(loginDTO: LoginDTO): Promise<Account> {
-    const account = this.accountRepository.findOneBy({ email: loginDTO.email });
+    const account = await this.accountRepository.findOneBy({ email: loginDTO.email });
     if (!account) {
       throw new NotFoundException(`No Account with this email was found`);
     }
     return account;
+  }
+
+  async getAdminByAccountId(accountId: string): Promise<Admin> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId },
+      relations: {
+        person: {
+          admin: true
+        }
+      }
+    });
+
+    if (!account.person.admin) {
+      throw new NotFoundException(`No Admin associated with this account was found`);
+    }
+
+    return account.person.admin;
   }
 }

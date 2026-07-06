@@ -1,6 +1,6 @@
 export enum AdminLevel {
-  SuperAdmin = 'SUPER_ADMIN',
-  Manager = 'MANAGER',
-  Collector = 'COLLECTOR',
-  Auditor = 'AUDITOR',
+  SuperAdmin = 3,
+  Manager = 2,
+  Collector = 1,
+  Auditor = 0,
 }
