@@ -14,6 +14,8 @@ import { Account } from './accounts/account.entity';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './auth/jwt.guard';
+import { InstallmentPlansModule } from './installment_plans/installment_plans.module';
+import { InstallmentMonthsModule } from './installment_months/installment_months.module';
 
 @Module({
   imports: [
@@ -40,7 +42,9 @@ import { JwtGuard } from './auth/jwt.guard';
     ClientsModule,
     AdminsModule,
     AccountsModule,
-    AuthModule
+    AuthModule,
+    InstallmentPlansModule,
+    InstallmentMonthsModule
   ],
   controllers: [AppController],
   providers: [
