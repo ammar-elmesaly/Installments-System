@@ -3,7 +3,7 @@ import { InstallmentPlan } from "../installment_plans/installment_plan.entity";
 import dayjs from 'dayjs';
 import { InstallmentMonthStatus } from "./enums/installmentMonthStatus.enum";
 
-@Entity('installment_plans')
+@Entity('installment_months')
 export class InstallmentMonth {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -11,7 +11,7 @@ export class InstallmentMonth {
   @Column({ type: 'date' })
   due_date: Date;
 
-  @Column({ type: 'integer' })
+  @Column({ type: 'numeric', precision: 12, scale: 2 })
   expected_amount: number;
 
   @Column({ type: 'numeric', precision: 12, scale: 2, default: 0 })
@@ -33,6 +33,8 @@ export class InstallmentMonth {
 
   @BeforeInsert()
   setDueDate() {
-    this.due_date = dayjs().add(1, 'month').toDate();
+    if (!this.due_date) {
+      this.due_date = dayjs().add(1, 'month').toDate();
+    }
   }
 }

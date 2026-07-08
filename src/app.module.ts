@@ -16,6 +16,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './auth/jwt.guard';
 import { InstallmentPlansModule } from './installment_plans/installment_plans.module';
 import { InstallmentMonthsModule } from './installment_months/installment_months.module';
+import { InstallmentPlan } from './installment_plans/installment_plan.entity';
+import { InstallmentMonth } from './installment_months/installment_month.entity';
 
 @Module({
   imports: [
@@ -32,7 +34,9 @@ import { InstallmentMonthsModule } from './installment_months/installment_months
         Person,
         Client,
         Admin,
-        Account
+        Account,
+        InstallmentPlan,
+        InstallmentMonth
       ]
     }),
     ConfigModule.forRoot({
