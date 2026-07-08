@@ -18,6 +18,8 @@ import { InstallmentPlansModule } from './installment_plans/installment_plans.mo
 import { InstallmentMonthsModule } from './installment_months/installment_months.module';
 import { InstallmentPlan } from './installment_plans/installment_plan.entity';
 import { InstallmentMonth } from './installment_months/installment_month.entity';
+import { FallbackContactsModule } from './fallback_contacts/fallback_contacts.module';
+import { FallbackContact } from './fallback_contacts/fallback_contact.entity';
 
 @Module({
   imports: [
@@ -36,7 +38,8 @@ import { InstallmentMonth } from './installment_months/installment_month.entity'
         Admin,
         Account,
         InstallmentPlan,
-        InstallmentMonth
+        InstallmentMonth,
+        FallbackContact
       ]
     }),
     ConfigModule.forRoot({
@@ -48,7 +51,8 @@ import { InstallmentMonth } from './installment_months/installment_month.entity'
     AccountsModule,
     AuthModule,
     InstallmentPlansModule,
-    InstallmentMonthsModule
+    InstallmentMonthsModule,
+    FallbackContactsModule
   ],
   controllers: [AppController],
   providers: [

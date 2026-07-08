@@ -26,7 +26,7 @@ export class InstallmentMonth {
   @ManyToOne(
     () => InstallmentPlan,
     installment_plan => installment_plan.installment_months,
-    { nullable: false, onDelete: 'RESTRICT' }
+    { nullable: false, onDelete: 'CASCADE' }
   )
   @JoinColumn({ name: 'installment_plan_id' })
   installment_plan: InstallmentPlan;

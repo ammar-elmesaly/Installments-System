@@ -20,8 +20,8 @@ export class AdminsService {
     return this.adminsRepository.find({ relations: { person: true } });
   }
 
-  findById(id: string): Promise<Admin> {
-    const admin = this.adminsRepository.findOne({ where: { id }, relations: { person: true } });
+  async findById(id: string): Promise<Admin> {
+    const admin = await this.adminsRepository.findOne({ where: { id }, relations: { person: true } });
     if (!admin) {
       throw new NotFoundException(`Admin with ID ${id} not found`);
     }

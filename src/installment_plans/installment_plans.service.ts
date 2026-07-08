@@ -27,6 +27,11 @@ export class InstallmentPlansService {
     try {
       const client = await this.clientsService.findById(createPlanDTO.client_id);
 
+      // update the client's total_paid_cash (down payment)
+      await this.clientsService.updateById(client.id, {
+        total_paid_cash: Big(client.total_paid_cash).add(createPlanDTO.down_payment).toNumber()
+      });
+
       const installmentPlan = queryRunner.manager.create(InstallmentPlan);
       installmentPlan.client = client;
       installmentPlan.down_payment = createPlanDTO.down_payment;
