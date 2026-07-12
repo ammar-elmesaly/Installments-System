@@ -20,6 +20,7 @@ import { InstallmentPlan } from './installment_plans/installment_plan.entity';
 import { InstallmentMonth } from './installment_months/installment_month.entity';
 import { FallbackContactsModule } from './fallback_contacts/fallback_contacts.module';
 import { FallbackContact } from './fallback_contacts/fallback_contact.entity';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -52,7 +53,8 @@ import { FallbackContact } from './fallback_contacts/fallback_contact.entity';
     AuthModule,
     InstallmentPlansModule,
     InstallmentMonthsModule,
-    FallbackContactsModule
+    FallbackContactsModule,
+    TransactionsModule
   ],
   controllers: [AppController],
   providers: [

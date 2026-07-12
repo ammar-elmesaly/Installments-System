@@ -1,6 +1,7 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Request } from '@nestjs/common';
 import { CreateInstallmentPlanDTO } from './dto/createInstallmentPlan.dto';
 import { InstallmentPlansService } from './installment_plans.service';
+import { PaymentDTO } from './dto/payment.dto';
 
 @Controller('installment-plans')
 export class InstallmentPlansController {
@@ -9,5 +10,10 @@ export class InstallmentPlansController {
   @Post('new')
   create(@Body() createPlanDTO: CreateInstallmentPlanDTO) {
     return this.installmentPlansService.create(createPlanDTO);
+  }
+
+  @Post('pay')
+  pay(@Body() paymentDTO: PaymentDTO, @Request() req) {
+    return this.installmentPlansService.pay(paymentDTO, req.user.sub);
   }
 }

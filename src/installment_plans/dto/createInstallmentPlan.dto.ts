@@ -1,4 +1,4 @@
-import { IsUUID, IsNumber, IsInt, IsArray, ValidateNested, Min, IsOptional, IsDateString } from 'class-validator';
+import { IsUUID, IsNumber, IsInt, IsArray, ValidateNested, Min, IsOptional, IsDateString, IsPositive } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class PlanItemDTO {
@@ -15,10 +15,12 @@ export class CreateInstallmentPlanDTO {
   client_id: string;
 
   @IsNumber()
+  @IsPositive()
   @Min(0)
   down_payment: number;
 
   @IsNumber()
+  @IsPositive()
   @IsOptional()
   total_amount: number;
 

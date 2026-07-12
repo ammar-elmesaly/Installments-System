@@ -1,11 +1,12 @@
 import { CreatePersonDTO } from "../../people/dto/person.dto";
-import { IsEnum, IsNumber, IsOptional } from "class-validator";
+import { IsEnum, IsNumber, IsOptional, IsPositive } from "class-validator";
 import { ClientStatus } from "../enums/clientStatus.enum";
 import { PartialType } from "@nestjs/mapped-types";
 
 export class CreateClientDTO extends CreatePersonDTO {
   @IsOptional()
   @IsNumber()
+  @IsPositive()
   readonly total_paid_cash: number;
 
   @IsOptional()
