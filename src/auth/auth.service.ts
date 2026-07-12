@@ -32,12 +32,23 @@ export class AuthService {
     }
 
     let adminLevel: AdminLevel;
+
     if (account.role === Role.Admin) {
       const admin = await this.accountsService.getAdminByAccountId(account.id);
       adminLevel = admin.admin_level;
     }
 
-    const payload: PayloadType = { email: account.email, role: account.role, admin_level: adminLevel, id: account.id };
+    account.token_version += 1;
+
+    await this.accountsService.updateTokenVersion(account.id, account.token_version);
+
+    const payload: PayloadType = {
+      token_version: account.token_version,
+      email: account.email,
+      role: account.role,
+      admin_level: adminLevel,
+      id: account.id
+    };
 
     return {
       access_token: this.jwtService.sign(payload)

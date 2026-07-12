@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from './account.entity';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { CreateAdminAccountDTO, CreateClientAccountDTO } from './dto/account.dto';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -21,10 +21,9 @@ export class AccountsService {
     private dataSource: DataSource
   ) {}
 
-  // If user is an admin (we know with token), then proceed no problem
-  // Else (user is a client):
-  //* If createAccountDTO.role is Role.Admin, get out (rejected)
-  //* Else (createAccountDTO.role is Role.Client) we check whether the user is the personId
+  updateTokenVersion(accountId: string, tokenVersion: number): Promise<UpdateResult> {
+    return this.accountRepository.update({ id: accountId }, { token_version: tokenVersion });
+  }
 
   async createAdmin(createAccountDTO: CreateAdminAccountDTO): Promise<Account> {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -155,6 +154,15 @@ export class AccountsService {
     }
   }
 
+  async findById(accountId: string): Promise<Account> {
+    const account = await this.accountRepository.findOneBy({ id: accountId });
+    if (!account) {
+      throw new NotFoundException(`Account with ID ${accountId} not found`);
+    }
+
+    return account;
+  }
+  
   async findByEmail(loginDTO: LoginDTO): Promise<Account> {
     const account = await this.accountRepository.findOneBy({ email: loginDTO.email });
     if (!account) {

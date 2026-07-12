@@ -8,6 +8,9 @@ export class Account {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ default: 1 })
+  token_version: number;
+
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 

@@ -1,11 +1,15 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
+import { AccountsService } from "../accounts/accounts.service";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly accountsService: AccountsService
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -14,6 +18,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    return { email: payload.email, role: payload.role, admin_level: payload.admin_level, id: payload.id };
+    const account = await this.accountsService.findById(payload.id);
+    
+    if (payload.token_version !== account.token_version) {
+      throw new UnauthorizedException('Another device has logged in, please re-login.');
+    }
+
+    return { 
+      token_version: payload.token_version, 
+      email: payload.email, 
+      role: payload.role, 
+      admin_level: payload.admin_level, 
+      id: payload.id 
+    };
   }
 }
