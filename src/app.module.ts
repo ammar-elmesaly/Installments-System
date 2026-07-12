@@ -22,6 +22,7 @@ import { FallbackContactsModule } from './fallback_contacts/fallback_contacts.mo
 import { FallbackContact } from './fallback_contacts/fallback_contact.entity';
 import { TransactionsModule } from './transactions/transactions.module';
 import { Transaction } from './transactions/transaction.entity';
+import { TelegramService } from './utils/telegram.service';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { Transaction } from './transactions/transaction.entity';
   controllers: [AppController],
   providers: [
     AppService,
+    TelegramService,
     {
       provide: APP_GUARD,
       useClass: JwtGuard,

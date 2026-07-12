@@ -12,3 +12,8 @@ export class PaymentDTO {
   @IsPositive()
   paid_amount: number;
 }
+
+export class UnpayDTO {
+  @IsUUID()
+  installment_plan_id: string;
+}

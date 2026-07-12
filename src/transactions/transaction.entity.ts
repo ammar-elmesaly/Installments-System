@@ -20,7 +20,7 @@ export class Transaction {
   @ManyToOne(
     () => Admin,
     admin => admin.transactions,
-    { nullable: false, onDelete: 'NO ACTION' }
+    { nullable: false, onDelete: 'SET NULL' }
   )
   @JoinColumn({ name: 'admin_id' })
   admin: Admin;

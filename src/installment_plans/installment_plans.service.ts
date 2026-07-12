@@ -4,7 +4,7 @@ import { InstallmentPlan } from './installment_plan.entity';
 import { CreateInstallmentPlanDTO } from './dto/createInstallmentPlan.dto';
 import { CreateInstallmentMonthDTO } from '../installment_months/dto/createInstallmentMonth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaymentDTO } from './dto/payment.dto';
+import { PaymentDTO, UnpayDTO } from './dto/payment.dto';
 import { Admin } from '../admins/admin.entity';
 import { InstallmentMonthStatus } from '../installment_months/enums/installmentMonthStatus.enum';
 import { InstallmentMonth } from '../installment_months/installment_month.entity';
@@ -13,6 +13,7 @@ import { Transaction } from '../transactions/transaction.entity';
 import dayjs from 'dayjs';
 import Big from 'big.js';
 import { Account } from '../accounts/account.entity';
+import { InstallmentPlanStatus } from './enums/installmentPlanStatus.enum';
 
 @Injectable()
 export class InstallmentPlansService {  
@@ -57,6 +58,7 @@ export class InstallmentPlansService {
 
       const savedInstallmentPlan = await queryRunner.manager.save(installmentPlan);
 
+      // start_date here is the date of the first installment (not contract date)
       let baseDueDate = createPlanDTO.start_date ? dayjs(createPlanDTO.start_date) : dayjs().add(1, 'month');
       const expectedAmount = Big(installmentPlan.total_amount).div(createPlanDTO.duration_months);
       const roundedExpectedAmount = expectedAmount.round(2, Big.roundHalfUp).toNumber();
@@ -168,7 +170,12 @@ export class InstallmentPlansService {
       toPayInstallmentMonth.paid_amount = totalAccumulatedPaid.toNumber();
       toPayInstallmentMonth.status = newStatus;
 
-      await queryRunner.manager.save(InstallmentMonth, toPayInstallmentMonth)
+      await queryRunner.manager.save(InstallmentMonth, toPayInstallmentMonth);
+
+      // If it's the last month, then mark installmentPlan as PAID 
+      if (installmentPlan.installment_months.length === 1) {
+        await queryRunner.manager.update(InstallmentPlan, { id: installmentPlan.id }, { status: InstallmentPlanStatus.Paid });
+      }
 
       // Update client's total_paid_cash
       const client = installmentPlan.client;
@@ -197,6 +204,119 @@ export class InstallmentPlansService {
         transaction: savedTransaction,
       };
     
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async unpay(unpayDTO: UnpayDTO, accountId: string) {
+    const installmentPlanId = unpayDTO.installment_plan_id;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const account = await queryRunner.manager.findOne(Account, {
+        where: { id: accountId },
+        relations: { person: { admin: true } }
+      });
+      if (!account?.person?.admin) {
+        throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+      }
+      const admin = account.person.admin;
+
+      const lastTransaction = await queryRunner.manager.findOne(Transaction, {
+        where: { installment_plan: { id: installmentPlanId } },
+        order: { created_at: 'DESC' }
+      });
+
+      if (!lastTransaction) {
+        throw new BadRequestException('No transactions found for this installment plan to revert.');
+      }
+
+      // Double reversal check.
+      if (lastTransaction.amount < 0) {
+        throw new BadRequestException('The last transaction is already a reversal.');
+      }
+
+      const installmentPlan = await queryRunner.manager
+        .createQueryBuilder(InstallmentPlan, "installmentPlan")
+        .leftJoinAndSelect("installmentPlan.installment_months", "installmentMonth")
+        .innerJoinAndSelect("installmentPlan.client", "client")
+        .where("installmentPlan.id = :id", { id: installmentPlanId })
+        .orderBy("installmentMonth.due_date", "DESC")
+        .getOne();
+
+      if (!installmentPlan) {
+        throw new NotFoundException(`Installment Plan with ID ${installmentPlanId} not found`);
+      }
+
+      // Only paid or partially paid months
+      const modifiedMonth = installmentPlan.installment_months.find(
+        month => month.status === InstallmentMonthStatus.Paid || month.status === InstallmentMonthStatus.PartiallyPaid
+      );
+
+      if (!modifiedMonth) {
+        throw new BadRequestException('No paid or partially paid months found to revert.');
+      }
+
+      const expectedAmount = new Big(modifiedMonth.expected_amount);
+      const currentPaid = new Big(modifiedMonth.paid_amount);
+      const refundAmount = new Big(lastTransaction.amount);
+
+      const totalAccumulatedPaid = currentPaid.minus(refundAmount);
+
+      if (totalAccumulatedPaid.lt(0)) {
+        throw new BadRequestException('Invalid rollback state: accumulated paid amount cannot be negative.');
+      }
+
+      let newStatus: InstallmentMonthStatus;
+      if (totalAccumulatedPaid.eq(0)) {
+        // Overdue or pending
+        const now = dayjs();
+        const dueDate = dayjs(modifiedMonth.due_date);
+        newStatus = now.isAfter(dueDate) ? InstallmentMonthStatus.Overdue : InstallmentMonthStatus.Pending;
+      } else {  // this means totalAccumulatedPaid is larger than 0, thus it's PartiallyPaid
+        newStatus = InstallmentMonthStatus.PartiallyPaid;
+      }
+
+      modifiedMonth.paid_amount = totalAccumulatedPaid.toNumber();
+      modifiedMonth.status = newStatus;
+
+      await queryRunner.manager.save(InstallmentMonth, modifiedMonth);
+
+      // If installmentPlan was PAID, we reopen it.
+      if (installmentPlan.status === InstallmentPlanStatus.Paid) {
+        await queryRunner.manager.update(InstallmentPlan, { id: installmentPlan.id }, { status: InstallmentPlanStatus.Active });
+      }
+
+      // Subtract refundAmount from client total_paid_cash
+      const client = installmentPlan.client;
+      const clientTotalPaidCash = new Big(client.total_paid_cash);
+      const updatedTotal = clientTotalPaidCash.minus(refundAmount);
+
+      client.total_paid_cash = updatedTotal.toNumber();
+      await queryRunner.manager.save(Client, client);
+
+      const reversalTransaction = queryRunner.manager.create(Transaction);
+      reversalTransaction.admin = admin;
+      reversalTransaction.amount = refundAmount.times(-1).toNumber();  // Negative amount
+      reversalTransaction.installment_plan = installmentPlan;
+      reversalTransaction.payment_type = lastTransaction.payment_type;
+
+      const savedReversal = await queryRunner.manager.save(reversalTransaction);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        message: 'Payment reversed successfully.',
+        transaction: savedReversal,
+      };
+
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
