@@ -1,16 +1,15 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FallbackContact } from './fallback_contact.entity';
 import { QueryRunner, Repository, DataSource } from 'typeorm';
 import { CreateFallbackContactDTO } from './dto/createFallbackContact.dto';
-import { ClientsService } from '../clients/clients.service';
+import { Client } from '../clients/client.entity';
 
 @Injectable()
 export class FallbackContactsService {
   constructor(
     @InjectRepository(FallbackContact)
     private fallbackContactsRepository: Repository<FallbackContact>,
-    private clientsService: ClientsService,
     private dataSource: DataSource
   ) {}
 
@@ -36,7 +35,11 @@ export class FallbackContactsService {
         throw new ConflictException('A fallback contact with this phone number already exists.');
       }
       
-      const client = await this.clientsService.findById(client_id);
+      const client = await queryRunner.manager.findOneBy(Client, { id: client_id });
+
+      if (!client) {
+        throw new NotFoundException(`Client with ID ${client_id} not found`);
+      }
 
       const fallbackContact = queryRunner.manager.create(FallbackContact, {
         name,

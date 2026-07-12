@@ -2,8 +2,6 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { DataSource, Repository } from 'typeorm';
 import { InstallmentPlan } from './installment_plan.entity';
 import { CreateInstallmentPlanDTO } from './dto/createInstallmentPlan.dto';
-import { ClientsService } from '../clients/clients.service';
-import { InstallmentMonthsService } from '../installment_months/installment_months.service';
 import dayjs from 'dayjs';
 import { CreateInstallmentMonthDTO } from '../installment_months/dto/createInstallmentMonth.dto';
 import Big from 'big.js';
@@ -19,8 +17,6 @@ export class InstallmentPlansService {
   constructor (
     @InjectRepository(InstallmentPlan)
     private installmentPlansRepository: Repository<InstallmentPlan>,
-    private installmentMonthsService: InstallmentMonthsService,
-    private clientsService: ClientsService,
     private dataSource: DataSource
   ) {}
 
@@ -30,16 +26,22 @@ export class InstallmentPlansService {
     await queryRunner.startTransaction();
     
     try {
-      const client = await this.clientsService.findById(createPlanDTO.client_id);
-
-      // update the client's total_paid_cash (down payment)
-      await this.clientsService.updateById(client.id, {
-        total_paid_cash: Big(client.total_paid_cash).add(createPlanDTO.down_payment).toNumber()
+      const client = await queryRunner.manager.findOneBy(Client, {
+        id: createPlanDTO.client_id,
       });
 
-      const installmentPlan = queryRunner.manager.create(InstallmentPlan);
-      installmentPlan.client = client;
-      installmentPlan.down_payment = createPlanDTO.down_payment;
+      if (!client) {
+        throw new NotFoundException(`Client with ID ${createPlanDTO.client_id} not found`);
+      }
+
+      // update the client's total_paid_cash (down payment)
+      client.total_paid_cash = Big(client.total_paid_cash).add(createPlanDTO.down_payment).toNumber();
+      await queryRunner.manager.save(Client, client);
+
+      const installmentPlan = queryRunner.manager.create(InstallmentPlan, {
+        client,
+        down_payment: createPlanDTO.down_payment,
+      });
 
       if (createPlanDTO.total_amount) {
         installmentPlan.total_amount = createPlanDTO.total_amount - createPlanDTO.down_payment;
@@ -61,7 +63,13 @@ export class InstallmentPlansService {
           due_date: calculatedDueDate,
           expected_amount: roundedExpectedAmount
         };
-        await this.installmentMonthsService.create(monthData, queryRunner);
+        const installmentMonth = queryRunner.manager.create(InstallmentMonth, {
+          due_date: monthData.due_date,
+          expected_amount: monthData.expected_amount,
+          installment_plan: { id: monthData.installment_plan_id },
+        });
+
+        await queryRunner.manager.save(installmentMonth);
       }
 
       await queryRunner.commitTransaction();

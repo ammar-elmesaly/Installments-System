@@ -1,9 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Admin } from './admin.entity';
 import { CreateAdminDTO, UpdateAdminDTO } from './dto/admin.dto';
 import { DataSource, EntityManager, QueryRunner, Repository } from 'typeorm';
-import { PeopleService } from '../people/people.service';
 import { Person } from '../people/person.entity';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 
@@ -12,7 +11,6 @@ export class AdminsService {
   constructor(
     @InjectRepository(Admin)
     private adminsRepository: Repository<Admin>,
-    private peopleService: PeopleService, 
     private dataSource: DataSource,
   ) {}
 
@@ -40,18 +38,30 @@ export class AdminsService {
     }
     
     try {
-      await this.peopleService.validateUniqueIdentifiers(
-        createAdminDTO.first_name,
-        createAdminDTO.second_name,
-        createAdminDTO.third_name,
-        createAdminDTO.last_name,
-        createAdminDTO.phone_number,
-        queryRunner.manager
-      );
+      const duplicatePerson = await queryRunner.manager.findOne(Person, {
+        where: [
+          {
+            first_name: createAdminDTO.first_name,
+            second_name: createAdminDTO.second_name,
+            third_name: createAdminDTO.third_name,
+            last_name: createAdminDTO.last_name,
+          },
+          { phone_number: createAdminDTO.phone_number },
+        ],
+      });
 
-      const person = await this.peopleService.create(createAdminDTO, queryRunner.manager); 
+      if (duplicatePerson) {
+        if (duplicatePerson.phone_number === createAdminDTO.phone_number) {
+          throw new ConflictException('This phone number is already registered.');
+        }
 
-      const admin = queryRunner.manager.create(Admin, { person });
+        throw new ConflictException('A person with this exact full name already exists.');
+      }
+
+      const person = queryRunner.manager.create(Person, createAdminDTO);
+      const savedPerson = await queryRunner.manager.save(person);
+
+      const admin = queryRunner.manager.create(Admin, { person: savedPerson });
       const savedAdmin = await queryRunner.manager.save(admin);
 
       if (isLocalRunner) {
@@ -80,10 +90,7 @@ export class AdminsService {
     await queryRunner.startTransaction();
 
     try {
-      const adminRepo = queryRunner.manager.getRepository(Admin);
-      const personRepo = queryRunner.manager.getRepository(Person);
-
-      const admin = await adminRepo.findOne({
+      const admin = await queryRunner.manager.findOne(Admin, {
         where: { id },
         relations: { person: true },
       });
@@ -95,13 +102,13 @@ export class AdminsService {
       const { admin_level, ...personFields } = updateAdminDTO;
 
       if (Object.keys(personFields).length > 0 && admin.person) {
-        personRepo.merge(admin.person, personFields);
-        await personRepo.save(admin.person);
+        queryRunner.manager.merge(Person, admin.person, personFields);
+        await queryRunner.manager.save(Person, admin.person);
       }
 
-      adminRepo.merge(admin, { admin_level });
+      queryRunner.manager.merge(Admin, admin, { admin_level });
 
-      const savedAdmin = await adminRepo.save(admin);
+      const savedAdmin = await queryRunner.manager.save(Admin, admin);
       await queryRunner.commitTransaction();
 
       return savedAdmin;

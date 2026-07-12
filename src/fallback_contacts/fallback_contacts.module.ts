@@ -3,13 +3,9 @@ import { FallbackContactsController } from './fallback_contacts.controller';
 import { FallbackContactsService } from './fallback_contacts.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FallbackContact } from './fallback_contact.entity';
-import { ClientsModule } from '../clients/clients.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([FallbackContact]),
-    ClientsModule
-  ],
+  imports: [TypeOrmModule.forFeature([FallbackContact])],
   controllers: [FallbackContactsController],
   providers: [FallbackContactsService]
 })

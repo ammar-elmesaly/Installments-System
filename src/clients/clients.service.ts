@@ -1,9 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Client } from './client.entity';
 import { CreateClientDTO, UpdateClientDTO } from './dto/client.dto';
 import { DataSource, EntityManager, Repository } from 'typeorm';
-import { PeopleService } from '../people/people.service';
 import { Person } from '../people/person.entity';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { QueryRunner } from 'typeorm';
@@ -13,7 +12,6 @@ export class ClientsService {
   constructor(
     @InjectRepository(Client)
     private clientsRepository: Repository<Client>,
-    private peopleService: PeopleService, 
     private dataSource: DataSource,
   ) {}
 
@@ -41,18 +39,30 @@ export class ClientsService {
     }
 
     try {
-      await this.peopleService.validateUniqueIdentifiers(
-        createClientDto.first_name,
-        createClientDto.second_name,
-        createClientDto.third_name,
-        createClientDto.last_name,
-        createClientDto.phone_number,
-        queryRunner.manager
-      );
+      const duplicatePerson = await queryRunner.manager.findOne(Person, {
+        where: [
+          {
+            first_name: createClientDto.first_name,
+            second_name: createClientDto.second_name,
+            third_name: createClientDto.third_name,
+            last_name: createClientDto.last_name,
+          },
+          { phone_number: createClientDto.phone_number },
+        ],
+      });
 
-      const person = await this.peopleService.create(createClientDto, queryRunner.manager); 
+      if (duplicatePerson) {
+        if (duplicatePerson.phone_number === createClientDto.phone_number) {
+          throw new ConflictException('This phone number is already registered.');
+        }
 
-      const client = queryRunner.manager.create(Client, { person });
+        throw new ConflictException('A person with this exact full name already exists.');
+      }
+
+      const person = queryRunner.manager.create(Person, createClientDto);
+      const savedPerson = await queryRunner.manager.save(person);
+
+      const client = queryRunner.manager.create(Client, { person: savedPerson });
       const savedClient = await queryRunner.manager.save(client);
 
       if (isLocalRunner) {
@@ -81,10 +91,7 @@ export class ClientsService {
     await queryRunner.startTransaction();
 
     try {
-      const clientRepo = queryRunner.manager.getRepository(Client);
-      const personRepo = queryRunner.manager.getRepository(Person);
-
-      const client = await clientRepo.findOne({
+      const client = await queryRunner.manager.findOne(Client, {
         where: { id },
         relations: { person: true },
       });
@@ -96,13 +103,13 @@ export class ClientsService {
       const { total_paid_cash, client_status, ...personFields } = updateClientDTO;
 
       if (Object.keys(personFields).length > 0 && client.person) {
-        personRepo.merge(client.person, personFields);
-        await personRepo.save(client.person);
+        queryRunner.manager.merge(Person, client.person, personFields);
+        await queryRunner.manager.save(Person, client.person);
       }
 
-      clientRepo.merge(client, { total_paid_cash, client_status });
+      queryRunner.manager.merge(Client, client, { total_paid_cash, client_status });
 
-      const savedClient = await clientRepo.save(client);
+      const savedClient = await queryRunner.manager.save(Client, client);
       await queryRunner.commitTransaction();
 
       return savedClient;
