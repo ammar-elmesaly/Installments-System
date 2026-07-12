@@ -5,5 +5,5 @@ export interface PayloadType {
   email: string;
   role: Role;
   admin_level: AdminLevel | undefined;
-  sub: string;
+  id: string;
 }

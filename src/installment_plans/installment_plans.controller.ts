@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Request } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { CreateInstallmentPlanDTO } from './dto/createInstallmentPlan.dto';
 import { InstallmentPlansService } from './installment_plans.service';
 import { PaymentDTO } from './dto/payment.dto';
@@ -7,13 +7,18 @@ import { PaymentDTO } from './dto/payment.dto';
 export class InstallmentPlansController {
   constructor (private installmentPlansService: InstallmentPlansService) {}
 
+  @Get('all')
+  findAll() {
+    return this.installmentPlansService.findAll();
+  }
+
   @Post('new')
   create(@Body() createPlanDTO: CreateInstallmentPlanDTO) {
     return this.installmentPlansService.create(createPlanDTO);
   }
 
   @Post('pay')
-  pay(@Body() paymentDTO: PaymentDTO, @Request() req) {
-    return this.installmentPlansService.pay(paymentDTO, req.user.sub);
+  pay(@Body() paymentDTO: PaymentDTO, @Req() req) {
+    return this.installmentPlansService.pay(paymentDTO, req.user.id);
   }
 }

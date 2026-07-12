@@ -21,6 +21,7 @@ import { InstallmentMonth } from './installment_months/installment_month.entity'
 import { FallbackContactsModule } from './fallback_contacts/fallback_contacts.module';
 import { FallbackContact } from './fallback_contacts/fallback_contact.entity';
 import { TransactionsModule } from './transactions/transactions.module';
+import { Transaction } from './transactions/transaction.entity';
 
 @Module({
   imports: [
@@ -40,7 +41,8 @@ import { TransactionsModule } from './transactions/transactions.module';
         Account,
         InstallmentPlan,
         InstallmentMonth,
-        FallbackContact
+        FallbackContact,
+        Transaction
       ]
     }),
     ConfigModule.forRoot({

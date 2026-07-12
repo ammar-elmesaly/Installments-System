@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { InstallmentPlan } from "../installment_plans/installment_plan.entity";
 import dayjs from 'dayjs';
 import { InstallmentMonthStatus } from "./enums/installmentMonthStatus.enum";

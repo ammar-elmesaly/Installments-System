@@ -1,6 +1,7 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Person } from "../people/person.entity";
 import { AdminLevel } from "./enums/adminLevel.enum";
+import { Transaction } from "../transactions/transaction.entity";
 
 @Entity('admins')
 export class Admin {
@@ -17,4 +18,10 @@ export class Admin {
   )
   @JoinColumn({ name: 'person_id' })
   person: Person;
+
+  @OneToMany(
+    () => Transaction,
+    transaction => transaction.admin
+  )
+  transactions: Transaction[];
 }

@@ -2,15 +2,17 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { DataSource, Repository } from 'typeorm';
 import { InstallmentPlan } from './installment_plan.entity';
 import { CreateInstallmentPlanDTO } from './dto/createInstallmentPlan.dto';
-import dayjs from 'dayjs';
 import { CreateInstallmentMonthDTO } from '../installment_months/dto/createInstallmentMonth.dto';
-import Big from 'big.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaymentDTO } from './dto/payment.dto';
 import { Admin } from '../admins/admin.entity';
 import { InstallmentMonthStatus } from '../installment_months/enums/installmentMonthStatus.enum';
 import { InstallmentMonth } from '../installment_months/installment_month.entity';
 import { Client } from '../clients/client.entity';
+import { Transaction } from '../transactions/transaction.entity';
+import dayjs from 'dayjs';
+import Big from 'big.js';
+import { Account } from '../accounts/account.entity';
 
 @Injectable()
 export class InstallmentPlansService {  
@@ -19,6 +21,10 @@ export class InstallmentPlansService {
     private installmentPlansRepository: Repository<InstallmentPlan>,
     private dataSource: DataSource
   ) {}
+
+  findAll() {
+    return this.installmentPlansRepository.find();
+  }
 
   async create(createPlanDTO: CreateInstallmentPlanDTO) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -34,7 +40,7 @@ export class InstallmentPlansService {
         throw new NotFoundException(`Client with ID ${createPlanDTO.client_id} not found`);
       }
 
-      // update the client's total_paid_cash (down payment)
+      // Update the client's total_paid_cash (down payment)
       client.total_paid_cash = Big(client.total_paid_cash).add(createPlanDTO.down_payment).toNumber();
       await queryRunner.manager.save(Client, client);
 
@@ -84,16 +90,27 @@ export class InstallmentPlansService {
     }
   }
 
-  async pay(paymentDTO: PaymentDTO, adminId: string) {
+  async pay(paymentDTO: PaymentDTO, accountId: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     
     try {
-      const admin = await queryRunner.manager.findOneBy(Admin, { id: adminId });
-      if (!admin) {
-        throw new NotFoundException(`Admin with ID ${adminId} not found`);
+      const account = await queryRunner.manager.findOne(Account, {
+        where: {
+          id: accountId
+        },
+        relations: {
+          person: {
+            admin: true
+          }
+        }
+      });
+      if (!account?.person?.admin) {
+        throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
       }
+
+      const admin = account.person.admin;
 
       const targetStatuses = [
         InstallmentMonthStatus.Pending,
@@ -136,7 +153,7 @@ export class InstallmentPlansService {
 
       const totalAccumulatedPaid = currentPaid.plus(newPayment);
 
-      let newStatus: InstallmentMonthStatus;  // new month status after payment
+      let newStatus: InstallmentMonthStatus;  // New month status after payment
 
       if (totalAccumulatedPaid.lt(expectedAmount)) {
         newStatus = InstallmentMonthStatus.PartiallyPaid;
@@ -153,7 +170,7 @@ export class InstallmentPlansService {
 
       await queryRunner.manager.save(InstallmentMonth, toPayInstallmentMonth)
 
-      // update client's total_paid_cash
+      // Update client's total_paid_cash
       const client = installmentPlan.client;
 
       const clientTotalPaidCash = new Big(client.total_paid_cash);
@@ -163,8 +180,22 @@ export class InstallmentPlansService {
 
       await queryRunner.manager.save(Client, client);
 
-      // TODO: Make a transaction
+      // Record the transaction
+      const transaction = queryRunner.manager.create(Transaction);
+
+      transaction.admin = admin;
+      transaction.amount = newPayment.toNumber();
+      transaction.installment_plan = installmentPlan;
+      transaction.payment_type = paymentDTO.payment_type;
+
+      const savedTransaction = await queryRunner.manager.save(transaction);
+
       await queryRunner.commitTransaction();
+
+      return {
+        message: 'Payment recorded successfully.',
+        transaction: savedTransaction,
+      };
     
     } catch (error) {
       await queryRunner.rollbackTransaction();

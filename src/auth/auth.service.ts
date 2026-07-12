@@ -37,8 +37,9 @@ export class AuthService {
       adminLevel = admin.admin_level;
     }
 
-    const payload: PayloadType = { email: account.email, role: account.role, admin_level: adminLevel, sub: account.id };
+    const payload: PayloadType = { email: account.email, role: account.role, admin_level: adminLevel, id: account.id };
 
+    console.log(payload);
     return {
       access_token: this.jwtService.sign(payload)
     }
