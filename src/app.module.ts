@@ -3,7 +3,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { PeopleModule } from './people/people.module';
 import { Person } from './people/person.entity';
 import { ClientsModule } from './clients/clients.module';
 import { Client } from './clients/client.entity';
@@ -23,6 +22,7 @@ import { FallbackContact } from './fallback_contacts/fallback_contact.entity';
 import { TransactionsModule } from './transactions/transactions.module';
 import { Transaction } from './transactions/transaction.entity';
 import { TelegramService } from './utils/telegram.service';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -52,7 +52,6 @@ import { TelegramService } from './utils/telegram.service';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    PeopleModule,
     ClientsModule,
     AdminsModule,
     AccountsModule,
@@ -60,7 +59,8 @@ import { TelegramService } from './utils/telegram.service';
     InstallmentPlansModule,
     InstallmentMonthsModule,
     FallbackContactsModule,
-    TransactionsModule
+    TransactionsModule,
+    DashboardModule
   ],
   controllers: [AppController],
   providers: [

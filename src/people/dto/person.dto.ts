@@ -19,6 +19,11 @@ export class CreatePersonDTO {
   readonly last_name: string;
 
   @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  readonly nick_name?: string;
+
+  @IsString()
   @Length(11, 11, { message: "phone_number must be exactly 11 characters long" })
   readonly phone_number: string;
 

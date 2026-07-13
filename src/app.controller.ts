@@ -9,16 +9,4 @@ export class AppController {
     private readonly appService: AppService,
     private readonly telegramService: TelegramService
   ) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
-
-  @Get('test-telegram')
-  @Public()
-  async testTelegram() {
-    await this.telegramService.sendAdminNotification('*Nice* **Nice** _Nice_');
-    return { success: true, message: 'Test message sent to Telegram!' };
-  }
 }

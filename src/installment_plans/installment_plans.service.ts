@@ -193,6 +193,7 @@ export class InstallmentPlansService {
       transaction.admin = admin;
       transaction.amount = newPayment.toNumber();
       transaction.installment_plan = installmentPlan;
+      transaction.installment_month = toPayInstallmentMonth;
       transaction.payment_type = paymentDTO.payment_type;
 
       const savedTransaction = await queryRunner.manager.save(transaction);
@@ -306,6 +307,7 @@ export class InstallmentPlansService {
       reversalTransaction.admin = admin;
       reversalTransaction.amount = refundAmount.times(-1).toNumber();  // Negative amount
       reversalTransaction.installment_plan = installmentPlan;
+      reversalTransaction.installment_month = modifiedMonth;
       reversalTransaction.payment_type = lastTransaction.payment_type;
 
       const savedReversal = await queryRunner.manager.save(reversalTransaction);

@@ -21,6 +21,9 @@ export abstract class Person {
   @Column({ type: 'varchar', length: 100 })
   last_name: string;
 
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  nick_name?: string;
+
   @Column({ type: 'char', length: 11, unique: true })
   phone_number: string;
 

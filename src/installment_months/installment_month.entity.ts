@@ -1,7 +1,8 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { InstallmentPlan } from "../installment_plans/installment_plan.entity";
 import dayjs from 'dayjs';
 import { InstallmentMonthStatus } from "./enums/installmentMonthStatus.enum";
+import { Transaction } from "../transactions/transaction.entity";
 
 @Entity('installment_months')
 export class InstallmentMonth {
@@ -30,6 +31,12 @@ export class InstallmentMonth {
   )
   @JoinColumn({ name: 'installment_plan_id' })
   installment_plan: InstallmentPlan;
+
+  @OneToMany(
+    () => Transaction,
+    transaction => transaction.installment_month
+  )
+  transactions: Transaction[];
 
   @BeforeInsert()
   setDueDate() {

@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGenerat
 import { Admin } from "../admins/admin.entity";
 import { PaymentType } from "../installment_plans/enums/paymentType.enum";
 import { InstallmentPlan } from "../installment_plans/installment_plan.entity";
+import { InstallmentMonth } from "../installment_months/installment_month.entity";
 
 @Entity('transactions')
 export class Transaction {
@@ -20,7 +21,7 @@ export class Transaction {
   @ManyToOne(
     () => Admin,
     admin => admin.transactions,
-    { nullable: false, onDelete: 'SET NULL' }
+    { nullable: false, onDelete: 'NO ACTION' }
   )
   @JoinColumn({ name: 'admin_id' })
   admin: Admin;
@@ -31,4 +32,12 @@ export class Transaction {
     { nullable: false, onDelete: 'NO ACTION' }
   )
   installment_plan: InstallmentPlan;
+
+  @ManyToOne(
+    () => InstallmentMonth,
+    installment_month => installment_month.transactions,
+    { nullable: false, onDelete: 'NO ACTION' }
+  )
+  @JoinColumn({ name: 'installment_month_id' })
+  installment_month: InstallmentMonth;
 }
