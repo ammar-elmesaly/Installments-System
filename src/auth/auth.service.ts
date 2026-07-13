@@ -24,7 +24,10 @@ export class AuthService {
   }
 
   async login(loginDTO: LoginDTO): Promise<{ access_token: string }> {
-    const account = await this.accountsService.findByEmail(loginDTO);
+    const account = await this.accountsService.findByEmail(
+      loginDTO,
+      new UnauthorizedException('Wrong email or password, please recheck your credentials')
+    );
 
     const validPassword = await bcrypt.compare(loginDTO.password, account.password_hash);
     if (!validPassword) {

@@ -8,6 +8,7 @@ import { Public } from './public.decorator';
 export class AuthController {
   constructor (private authService: AuthService) {}
 
+
   @Post('signup/admin')
   createAdmin(@Body() createAccountDTO: CreateAdminAccountDTO) {
     return this.authService.signupAdmin(createAccountDTO);

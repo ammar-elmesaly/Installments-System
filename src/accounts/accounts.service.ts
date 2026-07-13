@@ -78,6 +78,7 @@ export class AccountsService {
       await queryRunner.commitTransaction();
 
       delete savedAccount.password_hash;
+      delete savedAccount.token_version;
       
       return savedAccount;
 
@@ -163,10 +164,13 @@ export class AccountsService {
     return account;
   }
   
-  async findByEmail(loginDTO: LoginDTO): Promise<Account> {
+  async findByEmail(
+    loginDTO: LoginDTO,
+    exception = new NotFoundException(`No account with this email was found.`)
+  ): Promise<Account> {
     const account = await this.accountRepository.findOneBy({ email: loginDTO.email });
     if (!account) {
-      throw new NotFoundException(`No Account with this email was found`);
+      throw exception;
     }
     return account;
   }

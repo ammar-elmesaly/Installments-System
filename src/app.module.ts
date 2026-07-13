@@ -27,24 +27,27 @@ import { TelegramService } from './utils/telegram.service';
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    TypeOrmModule.forRoot({
-      type: "postgres",
-      host: String(process.env.DB_HOST || 'localhost'),
-      port: Number(process.env.DB_PORT) || 5432,
-      username: String(process.env.DB_USERNAME),
-      password: String(process.env.DB_PASSWORD),
-      database: String(process.env.DB_NAME),
-      synchronize: process.env.NODE_ENV !== 'production',
-      entities: [
-        Person,
-        Client,
-        Admin,
-        Account,
-        InstallmentPlan,
-        InstallmentMonth,
-        FallbackContact,
-        Transaction
-      ]
+    TypeOrmModule.forRootAsync({
+      useFactory: () => ({
+        type: "postgres",
+        url: process.env.DB_URL 
+          ? process.env.DB_URL 
+          : `postgresql://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+        ssl: process.env.NODE_ENV === 'production'
+          ? { rejectUnauthorized: false } 
+          : false,
+        synchronize: process.env.NODE_ENV !== 'production',
+        entities: [
+          Person,
+          Client,
+          Admin,
+          Account,
+          InstallmentPlan,
+          InstallmentMonth,
+          FallbackContact,
+          Transaction
+        ]
+      })
     }),
     ConfigModule.forRoot({
       isGlobal: true,
@@ -72,16 +75,24 @@ import { TelegramService } from './utils/telegram.service';
 export class AppModule {}
 
 /*
-* Use DATABASE_URL instead (neon)
+* Use this to connect with standard username, password, & host.
 TypeOrmModule.forRoot({
   type: "postgres",
-  url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/local_db',
-  ssl: process.env.NODE_ENV === 'production' || process.env.DB_SSL === 'true' 
-    ? { rejectUnauthorized: false } // Required for Neon cloud connection
-    : false,                        // Disabled for local development if not needed
-  synchronize: process.env.NODE_ENV !== 'production' && process.env.DB_SYNCHRONIZE === 'true',
+  host: String(process.env.DB_HOST || 'localhost'),
+  port: Number(process.env.DB_PORT) || 5432,
+  username: String(process.env.DB_USERNAME),
+  password: String(process.env.DB_PASSWORD),
+  database: String(process.env.DB_NAME),
+  synchronize: process.env.NODE_ENV !== 'production',
   entities: [
-    // Your entities here
+    Person,
+    Client,
+    Admin,
+    Account,
+    InstallmentPlan,
+    InstallmentMonth,
+    FallbackContact,
+    Transaction
   ]
-})
+}),
 */
