@@ -13,6 +13,7 @@ import {
 	DashboardQueryOptions,
 	DashboardSummary,
 } from './dashboard.types';
+import Big from 'big.js';
 
 @Injectable()
 export class DashboardService {
@@ -29,6 +30,8 @@ export class DashboardService {
 		const startOfDay = dayjs().startOf('day').toDate();
 		const endOfDay = dayjs().endOf('day').toDate();
 
+    // * archiveRows basically fetches made transactions up to 100 (the default)
+    // * receivable refers to money that you don't have but expect to come in the feature, Basically installments that haven't been paid yet
 		const [dailyAdminRows, receivableRow, archiveRows, archiveTotalCount] = await Promise.all([
 			this.transactionsRepository
 				.createQueryBuilder('transaction')
@@ -58,12 +61,17 @@ export class DashboardService {
 				.orderBy('collected_total', 'DESC')
 				.getRawMany(),
 
-			this.installmentMonthsRepository
-				.createQueryBuilder('installmentMonth')
-				.select('COUNT(installmentMonth.id)', 'pending_installments_count')
-				.addSelect('COALESCE(SUM(installmentMonth.expected_amount), 0)', 'pending_amount_total')
-				.where('installmentMonth.status = :status', { status: InstallmentMonthStatus.Pending })
-				.getRawOne(),
+      this.installmentMonthsRepository
+        .createQueryBuilder('installmentMonth')
+        .select('COUNT(installmentMonth.id)', 'pending_installments_count')
+        .addSelect(
+          'COALESCE(SUM(installmentMonth.expected_amount - installmentMonth.paid_amount), 0)', 
+          'receivable_amount_total'
+        )
+        .where('installmentMonth.status IN (:...statuses)', { 
+          statuses: [InstallmentMonthStatus.Pending, InstallmentMonthStatus.PartiallyPaid, InstallmentMonthStatus.Overdue] 
+        })
+        .getRawOne(),
 
 			this.transactionsRepository
 				.createQueryBuilder('transaction')
@@ -105,8 +113,8 @@ export class DashboardService {
 
 		const cashFlowToday = this.buildCashFlowSummary(dailyAdminRows);
 		const accountsReceivable = {
-			pending_installments_count: Number(receivableRow?.pending_installments_count ?? 0),
-			pending_amount_total: Number(receivableRow?.pending_amount_total ?? 0),
+			pending_installments_count: Big(receivableRow?.pending_installments_count ?? 0).toNumber(),
+			receivable_amount_total: Big(receivableRow?.receivable_amount_total ?? 0).toNumber(),
 		};
 
 		return {
@@ -134,11 +142,11 @@ export class DashboardService {
 
 		return {
 			date: dayjs().format('YYYY-MM-DD'),
-			total_collected: byAdmin.reduce((sum, item) => sum + item.collected_total, 0),
-			cash_collected_total: byAdmin.reduce((sum, item) => sum + item.cash_collected_total, 0),
+			total_collected: byAdmin.reduce((sum, item) => sum + item.collected_total, 0),  // Total money collected
+			cash_collected_total: byAdmin.reduce((sum, item) => sum + item.cash_collected_total, 0),  // Hard-cash collected (Not VISA or VODAFONE CASH)
 			reversal_count: byAdmin.reduce((sum, item) => sum + item.reversal_count, 0),
 			reversal_total: byAdmin.reduce((sum, item) => sum + item.reversal_total, 0),
-			net_total: byAdmin.reduce((sum, item) => sum + item.net_total, 0),
+			net_total: byAdmin.reduce((sum, item) => sum + item.net_total, 0),  // Reversal + Collected
 			collection_count: byAdmin.reduce((sum, item) => sum + item.collection_count, 0),
 			by_admin: byAdmin,
 		};
@@ -174,5 +182,4 @@ export class DashboardService {
 			},
 		};
 	}
-
 }

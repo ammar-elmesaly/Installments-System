@@ -67,7 +67,7 @@ export interface DashboardArchiveItem {
 
 export interface DashboardAccountsReceivable {
   pending_installments_count: number;
-  pending_amount_total: number;
+  receivable_amount_total: number;
 }
 
 export interface DashboardOverview {

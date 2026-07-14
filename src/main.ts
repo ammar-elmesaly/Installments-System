@@ -5,6 +5,8 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.setGlobalPrefix('api');
+  
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true, // Automatically strip non-whitelisted properties
     transform: true, // Automatically transform payloads to match DTO types
