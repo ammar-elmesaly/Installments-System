@@ -31,6 +31,7 @@ export class Transaction {
     installment_plan => installment_plan.transactions,
     { nullable: false, onDelete: 'NO ACTION' }
   )
+  @JoinColumn({ name: 'installment_plan_id' })
   installment_plan: InstallmentPlan;
 
   @ManyToOne(
