@@ -103,6 +103,43 @@ export class ClientsService {
 
       const { total_paid_cash, client_status, ...personFields } = updateClientDTO;
 
+      const hasNameChange =
+        personFields.first_name !== undefined ||
+        personFields.second_name !== undefined ||
+        personFields.third_name !== undefined ||
+        personFields.last_name !== undefined;
+      const hasPhoneChange = personFields.phone_number !== undefined;
+      
+      if ((hasNameChange || hasPhoneChange) && client.person) {
+        const mergedName = {
+          first_name: personFields.first_name ?? client.person.first_name,
+          second_name: personFields.second_name ?? client.person.second_name,
+          third_name: personFields.third_name ?? client.person.third_name,
+          last_name: personFields.last_name ?? client.person.last_name,
+        };
+        const mergedPhone = personFields.phone_number ?? client.person.phone_number;
+
+        const duplicatePerson = await queryRunner.manager
+          .createQueryBuilder(Person, 'person')
+          .where('person.id != :selfId', { selfId: client.person.id })
+          .andWhere(
+            new Brackets((qb) => {
+              qb.where(
+                'person.first_name = :first_name AND person.second_name = :second_name AND person.third_name = :third_name AND person.last_name = :last_name',
+                mergedName,
+              ).orWhere('person.phone_number = :phone_number', { phone_number: mergedPhone });
+            }),
+          )
+          .getOne();
+
+        if (duplicatePerson) {
+          if (duplicatePerson.phone_number === mergedPhone) {
+            throw new ConflictException('This phone number is already registered.');
+          }
+          throw new ConflictException('A person with this exact full name already exists.');
+        }
+      }
+
       if (Object.keys(personFields).length > 0 && client.person) {
         queryRunner.manager.merge(Person, client.person, personFields);
         await queryRunner.manager.save(Person, client.person);
@@ -114,14 +151,13 @@ export class ClientsService {
       await queryRunner.commitTransaction();
 
       return savedClient;
-
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
       await queryRunner.release();
     }
-  } 
+  }
 
   async deleteById(
     id: string, 
@@ -161,11 +197,10 @@ export class ClientsService {
             `CONCAT(person.first_name, ' ', person.second_name, ' ', person.third_name, ' ', person.last_name) ILIKE :term`,
             { term },
           )
-            .orWhere('client.total_paid_cash ILIKE :term', { term })
+            .orWhere('person.nick_name ILIKE :term', { term })
             .orWhere('person.phone_number ILIKE :term', { term })
             .orWhere('person.address ILIKE :term', { term })
             .orWhere('person.profession ILIKE :term', { term })
-            .orWhere('person.nick_name ILIKE :term', { term })
         }),
       )
     }
