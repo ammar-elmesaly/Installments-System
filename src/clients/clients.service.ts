@@ -2,10 +2,11 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Client } from './client.entity';
 import { CreateClientDTO, UpdateClientDTO } from './dto/client.dto';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { Brackets, DataSource, EntityManager, Repository } from 'typeorm';
 import { Person } from '../people/person.entity';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { QueryRunner } from 'typeorm';
+import { ClientStatus } from './enums/clientStatus.enum';
 
 @Injectable()
 export class ClientsService {
@@ -138,7 +139,37 @@ export class ClientsService {
     return manager.getRepository(Person).remove(client.person);
   }
 
-  paginate(options: IPaginationOptions): Promise<Pagination<Client>> {
-    return paginate<Client>(this.clientsRepository, options, { relations: { person: true } });
+  paginate(
+    options: IPaginationOptions,
+    status?: ClientStatus,
+    search?: string,
+  ): Promise<Pagination<Client>> {
+    const query = this.clientsRepository
+      .createQueryBuilder('client')
+      .leftJoinAndSelect('client.person', 'person');
+
+    if (status) {
+      query.andWhere('client.client_status = :status', { status })
+    }
+
+    if (search) {
+      const term = `%${search}%`;
+
+      query.andWhere(
+        new Brackets((qb) => {
+          qb.where(
+            `CONCAT(person.first_name, ' ', person.second_name, ' ', person.third_name, ' ', person.last_name) ILIKE :term`,
+            { term },
+          )
+            .orWhere('client.total_paid_cash ILIKE :term', { term })
+            .orWhere('person.phone_number ILIKE :term', { term })
+            .orWhere('person.address ILIKE :term', { term })
+            .orWhere('person.profession ILIKE :term', { term })
+            .orWhere('person.nick_name ILIKE :term', { term })
+        }),
+      )
+    }
+
+    return paginate<Client>(query, options);
   }
 }
