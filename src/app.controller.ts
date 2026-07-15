@@ -8,14 +8,12 @@ import { CronGuard } from './auth/cron.guard';
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private readonly telegramService: TelegramService
   ) {}
 
   @Post('cron-job')
   @Public()
   @UseGuards(CronGuard)
-  async handleCronJob() {
-    await this.telegramService.sendAdminNotification('Cron JOB Working!');
-    return { message: 'Cron job completed successfully!'};
+  handleCronJob() {
+    return this.appService.handleDailyOverdueCheck();
   }
 }
