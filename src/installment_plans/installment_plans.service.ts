@@ -14,6 +14,7 @@ import Big from 'big.js';
 import { Account } from '../accounts/account.entity';
 import { InstallmentPlanStatus } from './enums/installmentPlanStatus.enum';
 import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
+import { PaymentType } from './enums/paymentType.enum';
 
 @Injectable()
 export class InstallmentPlansService {  
@@ -108,12 +109,21 @@ export class InstallmentPlansService {
     };
   }
 
-  async create(createPlanDTO: CreateInstallmentPlanDTO) {
+  async create(createPlanDTO: CreateInstallmentPlanDTO, accountId: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    
+  
     try {
+      const account = await queryRunner.manager.findOne(Account, {
+        where: { id: accountId },
+        relations: { person: { admin: true } }
+      });
+      if (!account?.person?.admin) {
+        throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+      }
+      const admin = account.person.admin;
+
       const client = await queryRunner.manager.findOneBy(Client, {
         id: createPlanDTO.client_id,
       });
@@ -148,6 +158,15 @@ export class InstallmentPlansService {
       
       const savedInstallmentPlan = await queryRunner.manager.save(installmentPlan);
 
+      // Record the down payment as a transaction so it shows up in the dashboard/archive.
+      if (createPlanDTO.down_payment > 0) {
+        const downPaymentTransaction = queryRunner.manager.create(Transaction);
+        downPaymentTransaction.admin = admin;
+        downPaymentTransaction.amount = createPlanDTO.down_payment;
+        downPaymentTransaction.installment_plan = savedInstallmentPlan;
+        downPaymentTransaction.payment_type = createPlanDTO.payment_type ?? PaymentType.Cash;
+        await queryRunner.manager.save(downPaymentTransaction);
+      }
 
       // duration_months is plan duration in months
       for (let m = 0; m < createPlanDTO.duration_months; m++) {
@@ -168,7 +187,7 @@ export class InstallmentPlansService {
 
       await queryRunner.commitTransaction();
 
-      return installmentPlan;
+      return savedInstallmentPlan;
 
     } catch (error) {
       await queryRunner.rollbackTransaction();

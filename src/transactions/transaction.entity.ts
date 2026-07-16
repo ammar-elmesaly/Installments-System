@@ -29,7 +29,7 @@ export class Transaction {
   @ManyToOne(
     () => InstallmentPlan,
     installment_plan => installment_plan.transactions,
-    { nullable: false, onDelete: 'NO ACTION' }
+    { nullable: true, onDelete: 'SET NULL' }
   )
   @JoinColumn({ name: 'installment_plan_id' })
   installment_plan: InstallmentPlan;
@@ -37,7 +37,7 @@ export class Transaction {
   @ManyToOne(
     () => InstallmentMonth,
     installment_month => installment_month.transactions,
-    { nullable: false, onDelete: 'NO ACTION' }
+    { nullable: true, onDelete: 'SET NULL' }
   )
   @JoinColumn({ name: 'installment_month_id' })
   installment_month: InstallmentMonth;

@@ -1,5 +1,6 @@
-import { IsUUID, IsNumber, IsInt, IsArray, ValidateNested, Min, IsOptional, IsDateString, IsPositive, IsString } from 'class-validator';
+import { IsUUID, IsNumber, IsInt, IsArray, ValidateNested, Min, IsOptional, IsDateString, IsPositive, IsString, MaxLength, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaymentType } from '../enums/paymentType.enum';
 
 class PlanItemDTO {
   @IsUUID()
@@ -33,7 +34,13 @@ export class CreateInstallmentPlanDTO {
   @Min(1)
   duration_months: number;
 
+  @IsOptional()
+  @IsEnum(PaymentType)
+  payment_type: PaymentType;
+  
   @IsString()
+  @IsOptional()
+  @MaxLength(1000)
   notes?: string;
 
   @IsOptional()

@@ -24,7 +24,7 @@ export class InstallmentPlan {
   @Column({ type: 'date' })
   start_date: Date;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', length: 1000, nullable: true })
   notes?: string;
   
   @ManyToOne(

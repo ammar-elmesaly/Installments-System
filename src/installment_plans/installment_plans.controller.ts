@@ -19,8 +19,8 @@ export class InstallmentPlansController {
   }
 
   @Post('new')
-  create(@Body() createPlanDTO: CreateInstallmentPlanDTO) {
-    return this.installmentPlansService.create(createPlanDTO);
+  create(@Body() createPlanDTO: CreateInstallmentPlanDTO, @Req() req) {
+    return this.installmentPlansService.create(createPlanDTO, req.user.id);
   }
 
   @Post('pay')

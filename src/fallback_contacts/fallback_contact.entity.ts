@@ -15,7 +15,7 @@ export class FallbackContact {
   @Column({ type: 'char', length: 11, unique: true })
   phone_number: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', length: 1000, nullable: true })
   notes?: string;
 
   @ManyToMany(

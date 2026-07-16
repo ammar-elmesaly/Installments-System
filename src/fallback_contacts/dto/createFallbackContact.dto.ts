@@ -1,4 +1,4 @@
-import { IsString, IsUUID, Length, MaxLength } from "class-validator";
+import { IsOptional, IsString, IsUUID, Length, MaxLength } from "class-validator";
 
 export class CreateFallbackContactDTO {
   @IsUUID()
@@ -17,5 +17,7 @@ export class CreateFallbackContactDTO {
   readonly phone_number: string;
 
   @IsString()
+  @IsOptional()
+  @MaxLength(1000)
   readonly notes?: string;
 }
