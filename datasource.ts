@@ -2,6 +2,7 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { Initial1784040177354 } from './src/migrations/1784040177354-Initial';
+import { InstallmentPlan1784214047886 } from './src/migrations/1784214047886-InstallmentPlan';
 
 // Load .env file variables
 config();
@@ -20,5 +21,8 @@ export const AppDataSource = new DataSource({
   // Point to the compiled JS files (for production/running) 
   // and TS files (for CLI generation)
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  migrations: [Initial1784040177354],
+  migrations: [
+    Initial1784040177354,
+    InstallmentPlan1784214047886
+  ],
 });

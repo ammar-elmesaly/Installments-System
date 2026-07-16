@@ -1,11 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
 import { InstallmentPlan } from './installment_plan.entity';
 import { CreateInstallmentPlanDTO } from './dto/createInstallmentPlan.dto';
 import { CreateInstallmentMonthDTO } from '../installment_months/dto/createInstallmentMonth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaymentDTO, UnpayDTO } from './dto/payment.dto';
-import { Admin } from '../admins/admin.entity';
 import { InstallmentMonthStatus } from '../installment_months/enums/installmentMonthStatus.enum';
 import { InstallmentMonth } from '../installment_months/installment_month.entity';
 import { Client } from '../clients/client.entity';
@@ -14,6 +13,7 @@ import dayjs from 'dayjs';
 import Big from 'big.js';
 import { Account } from '../accounts/account.entity';
 import { InstallmentPlanStatus } from './enums/installmentPlanStatus.enum';
+import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class InstallmentPlansService {  
@@ -23,8 +23,89 @@ export class InstallmentPlansService {
     private dataSource: DataSource
   ) {}
 
-  findAll() {
-    return this.installmentPlansRepository.find();
+  async paginate(
+    options: IPaginationOptions,
+    status: InstallmentPlanStatus,
+    search: string,
+  ): Promise<Pagination<InstallmentPlan>> {
+    const page = Number(options.page) || 1;
+    const limit = Number(options.limit) || 10;
+
+    const idSubQuery = this.installmentPlansRepository
+      .createQueryBuilder('installmentPlan')
+      .leftJoin('installmentPlan.client', 'client')
+      .leftJoin('client.person', 'person')
+      .select('installmentPlan.id')
+      .orderBy('installmentPlan.id', 'ASC')
+      .limit(limit)
+      .offset((page - 1) * limit);
+
+    if (status) {
+      idSubQuery.andWhere('installmentPlan.status = :status', { status });
+    }
+
+    if (search) {
+      const term = `%${search}%`;
+      idSubQuery.andWhere(
+        new Brackets((qb) => {
+          qb.where(
+            `CONCAT(person.first_name, ' ', person.second_name, ' ', person.third_name, ' ', person.last_name) ILIKE :term`,
+            { term },
+          )
+            .orWhere('person.nick_name ILIKE :term', { term })
+            .orWhere('person.phone_number ILIKE :term', { term })
+            .orWhere('person.address ILIKE :term', { term })
+            .orWhere('person.profession ILIKE :term', { term })
+        }),
+      );
+    }
+
+    // Count query: same filters, no limit/offset, just a count of distinct plans.
+    const countQuery = this.installmentPlansRepository
+      .createQueryBuilder('installmentPlan')
+      .leftJoin('installmentPlan.client', 'client')
+      .leftJoin('client.person', 'person');
+
+    if (status) {
+      countQuery.andWhere('installmentPlan.status = :status', { status });
+    }
+    if (search) {
+      const term = `%${search}%`;
+      countQuery.andWhere(
+        new Brackets((qb) => {
+          qb.where(
+            `CONCAT(person.first_name, ' ', person.second_name, ' ', person.third_name, ' ', person.last_name) ILIKE :term`,
+            { term },
+          )
+            .orWhere('person.nick_name ILIKE :term', { term })
+            .orWhere('person.phone_number ILIKE :term', { term })
+            .orWhere('person.address ILIKE :term', { term })
+            .orWhere('person.profession ILIKE :term', { term })
+        }),
+      );
+    }
+    const totalItems = await countQuery.getCount();
+
+    const items = await this.installmentPlansRepository
+      .createQueryBuilder('installmentPlan')
+      .leftJoinAndSelect('installmentPlan.client', 'client')
+      .leftJoinAndSelect('installmentPlan.installment_months', 'installment_months')
+      .leftJoinAndSelect('client.person', 'person')
+      .where(`installmentPlan.id IN (${idSubQuery.getQuery()})`)
+      .setParameters(idSubQuery.getParameters())
+      .orderBy('installmentPlan.id', 'ASC')
+      .getMany();
+
+    return {
+      items,
+      meta: {
+        totalItems,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
   }
 
   async create(createPlanDTO: CreateInstallmentPlanDTO) {
@@ -56,12 +137,17 @@ export class InstallmentPlansService {
         // TODO: calculate total_amount based on createPlanDTO.items
       }
 
-      const savedInstallmentPlan = await queryRunner.manager.save(installmentPlan);
-
       // start_date here is the date of the first installment (not contract date)
       let baseDueDate = createPlanDTO.start_date ? dayjs(createPlanDTO.start_date) : dayjs().add(1, 'month');
       const expectedAmount = Big(installmentPlan.total_amount).div(createPlanDTO.duration_months);
       const roundedExpectedAmount = expectedAmount.round(2, Big.roundHalfUp).toNumber();
+
+      installmentPlan.start_date = new Date(createPlanDTO.start_date);
+      installmentPlan.monthly_amount = expectedAmount.toNumber();
+      installmentPlan.notes = createPlanDTO.notes;
+      
+      const savedInstallmentPlan = await queryRunner.manager.save(installmentPlan);
+
 
       // duration_months is plan duration in months
       for (let m = 0; m < createPlanDTO.duration_months; m++) {
@@ -325,5 +411,44 @@ export class InstallmentPlansService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async freeze(installmentPlanId: string): Promise<InstallmentPlan> {
+    const installmentPlan = await this.installmentPlansRepository.findOneBy({ id: installmentPlanId });
+
+    if (!installmentPlan) {
+      throw new NotFoundException(`InstallmentPlan with ID ${installmentPlanId} not found`);
+    }
+
+    if (installmentPlan.status === InstallmentPlanStatus.Paid) {
+      throw new BadRequestException('Cannot freeze a paid plan.');
+    }
+
+    installmentPlan.status = InstallmentPlanStatus.Frozen;
+
+    return this.installmentPlansRepository.save(installmentPlan);
+  }
+
+  async unfreeze(installmentPlanId: string): Promise<InstallmentPlan> {
+    const installmentPlan = await this.installmentPlansRepository.findOneBy({ id: installmentPlanId, status: InstallmentPlanStatus.Frozen });
+
+    if (!installmentPlan) {
+      throw new NotFoundException(`InstallmentPlan with ID ${installmentPlanId} not found`);
+    }
+
+    installmentPlan.status = InstallmentPlanStatus.Active;
+
+    return this.installmentPlansRepository.save(installmentPlan);
+  }
+
+  async updateNotes(installmentPlanId: string, notes: string): Promise<InstallmentPlan> {
+    const installmentPlan = await this.installmentPlansRepository.findOneBy({ id: installmentPlanId });
+
+    if (!installmentPlan) {
+      throw new NotFoundException(`InstallmentPlan with ID ${installmentPlanId} not found`);
+    }
+
+    installmentPlan.notes = notes;
+    return this.installmentPlansRepository.save(installmentPlan);
   }
 }

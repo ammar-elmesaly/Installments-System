@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { InstallmentMonth } from './installment_months/installment_month.entity';
 import { InstallmentMonthStatus } from './installment_months/enums/installmentMonthStatus.enum';
 import Big from 'big.js';
+import { InstallmentPlanStatus } from './installment_plans/enums/installmentPlanStatus.enum';
 
 @Injectable()
 export class AppService {
@@ -24,6 +25,7 @@ export class AppService {
       const overdueMonths = await queryRunner.manager.find(InstallmentMonth, {
         where: {
           status: In([InstallmentMonthStatus.Pending, InstallmentMonthStatus.PartiallyPaid]),
+          installment_plan: { status: InstallmentPlanStatus.Active },
           due_date: LessThan(today),
         },
         relations: {

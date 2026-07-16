@@ -17,6 +17,15 @@ export class InstallmentPlan {
 
   @Column({ type: 'numeric', precision: 12, scale: 2 })
   down_payment: number;  // مقدم
+
+  @Column({ type: 'numeric', precision: 12, scale: 2 })
+  monthly_amount: number;
+
+  @Column({ type: 'date' })
+  start_date: Date;
+
+  @Column({ type: 'varchar', nullable: true })
+  notes?: string;
   
   @ManyToOne(
     () => Client,

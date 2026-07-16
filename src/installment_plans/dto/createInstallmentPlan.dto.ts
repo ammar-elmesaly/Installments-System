@@ -1,10 +1,11 @@
-import { IsUUID, IsNumber, IsInt, IsArray, ValidateNested, Min, IsOptional, IsDateString, IsPositive } from 'class-validator';
+import { IsUUID, IsNumber, IsInt, IsArray, ValidateNested, Min, IsOptional, IsDateString, IsPositive, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class PlanItemDTO {
   @IsUUID()
   inventor_item_id: string;
 
+  
   @IsInt()
   @Min(1)
   quantity: number;
@@ -31,6 +32,9 @@ export class CreateInstallmentPlanDTO {
   @IsInt()
   @Min(1)
   duration_months: number;
+
+  @IsString()
+  notes?: string;
 
   @IsOptional()
   @IsArray()

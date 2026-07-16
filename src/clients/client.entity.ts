@@ -20,6 +20,7 @@ export class Client {
     person => person.client,
     { nullable: false, onDelete: 'CASCADE' }
   )
+  
   @JoinColumn({ name: 'person_id' })
   person: Person;
 
