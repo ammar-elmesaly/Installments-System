@@ -65,6 +65,11 @@ export interface DashboardArchiveItem {
   installment_month: DashboardArchiveInstallmentMonth;
 }
 
+export interface OverdueSummary {
+  overdue_count: number;
+  overdue_amount_total: number;
+}
+
 export interface DashboardAccountsReceivable {
   pending_installments_count: number;
   receivable_amount_total: number;
@@ -74,6 +79,7 @@ export interface DashboardOverview {
   generated_at: string;
   cash_flow_today: DashboardSummary;
   accounts_receivable: DashboardAccountsReceivable;
+  overdue_installments: OverdueSummary;
   archive_total_count: number;
   transaction_log_archive: DashboardArchiveItem[];
 }

@@ -32,7 +32,7 @@ export class DashboardService {
 
     // * archiveRows basically fetches made transactions up to 100 (the default)
     // * receivable refers to money that you don't have but expect to come in the feature, Basically installments that haven't been paid yet
-		const [dailyAdminRows, receivableRow, archiveRows, archiveTotalCount] = await Promise.all([
+		const [dailyAdminRows, receivableRow, overdueRow, archiveRows, archiveTotalCount] = await Promise.all([
 			this.transactionsRepository
 				.createQueryBuilder('transaction')
 				.innerJoin('transaction.admin', 'admin')
@@ -71,6 +71,16 @@ export class DashboardService {
         .where('installmentMonth.status IN (:...statuses)', { 
           statuses: [InstallmentMonthStatus.Pending, InstallmentMonthStatus.PartiallyPaid, InstallmentMonthStatus.Overdue] 
         })
+        .getRawOne(),
+
+      this.installmentMonthsRepository
+        .createQueryBuilder('installmentMonth')
+        .select('COUNT(installmentMonth.id)', 'overdue_count')
+        .addSelect(
+          'COALESCE(SUM(installmentMonth.expected_amount - installmentMonth.paid_amount), 0)',
+          'overdue_amount_total'
+        )
+        .where('installmentMonth.status = :status', { status: InstallmentMonthStatus.Overdue })
         .getRawOne(),
 
 			this.transactionsRepository
@@ -117,13 +127,19 @@ export class DashboardService {
 			receivable_amount_total: Big(receivableRow?.receivable_amount_total ?? 0).toNumber(),
 		};
 
-		return {
-			generated_at: new Date().toISOString(),
-			cash_flow_today: cashFlowToday,
-			accounts_receivable: accountsReceivable,
-			archive_total_count: archiveTotalCount,
-			transaction_log_archive: archiveRows.map((row) => this.mapArchiveRow(row)),
-		};
+    const overdueInstallments = {
+      overdue_count: Big(overdueRow?.overdue_count ?? 0).toNumber(),
+      overdue_amount_total: Big(overdueRow?.overdue_amount_total ?? 0).toNumber(),
+    };
+
+    return {
+      generated_at: new Date().toISOString(),
+      cash_flow_today: cashFlowToday,
+      accounts_receivable: accountsReceivable,
+      overdue_installments: overdueInstallments,
+      archive_total_count: archiveTotalCount,
+      transaction_log_archive: archiveRows.map((row) => this.mapArchiveRow(row)),
+    };
 	}
 
 	private buildCashFlowSummary(rows: any[]): DashboardSummary {
