@@ -23,6 +23,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { Transaction } from './transactions/transaction.entity';
 import { TelegramService } from './utils/telegram.service';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AdminLevelGuard } from './auth/admin-level.guard';
 
 @Module({
   imports: [
@@ -69,6 +70,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
     {
       provide: APP_GUARD,
       useClass: JwtGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AdminLevelGuard,
     },
   ],
 })

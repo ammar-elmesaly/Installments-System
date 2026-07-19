@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import { CreateAdminAccountDTO, CreateClientAccountDTO } from '../accounts/dto/account.dto';
 import { LoginDTO } from './dto/login.dto';
 import { Public } from './public.decorator';
+import { MinAdminLevel } from './admin-level.decorator';
+import { AdminLevel } from '../admins/enums/adminLevel.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -10,6 +12,7 @@ export class AuthController {
 
 
   @Post('signup/admin')
+  @MinAdminLevel(AdminLevel.SuperAdmin)
   createAdmin(@Body() createAccountDTO: CreateAdminAccountDTO) {
     return this.authService.signupAdmin(createAccountDTO);
   }
