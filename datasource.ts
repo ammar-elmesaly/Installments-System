@@ -4,6 +4,8 @@ import { config } from 'dotenv';
 import { Initial1784040177354 } from './src/migrations/1784040177354-Initial';
 import { InstallmentPlan1784214047886 } from './src/migrations/1784214047886-InstallmentPlan';
 import { AllowClientRemoval1784239272259 } from './src/migrations/1784239272259-AllowClientRemoval';
+import { ChangeAdminPermissions1784495604516 } from './src/migrations/1784495604516-ChangeAdminPermissions';
+import { AddActivityLogsEntity1784984263299 } from './src/migrations/1784984263299-AddActivityLogsEntity';
 
 // Load .env file variables
 config();
@@ -25,6 +27,8 @@ export const AppDataSource = new DataSource({
   migrations: [
     Initial1784040177354,
     InstallmentPlan1784214047886,
-    AllowClientRemoval1784239272259
+    AllowClientRemoval1784239272259,
+    ChangeAdminPermissions1784495604516,
+    AddActivityLogsEntity1784984263299
   ],
 });

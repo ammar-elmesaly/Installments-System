@@ -24,6 +24,8 @@ import { Transaction } from './transactions/transaction.entity';
 import { TelegramService } from './utils/telegram.service';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AdminLevelGuard } from './auth/admin-level.guard';
+import { ActivityLogsModule } from './activity_logs/activity_logs.module';
+import { ActivityLog } from './activity_logs/activity_logs.entity';
 
 @Module({
   imports: [
@@ -46,7 +48,8 @@ import { AdminLevelGuard } from './auth/admin-level.guard';
           InstallmentPlan,
           InstallmentMonth,
           FallbackContact,
-          Transaction
+          Transaction,
+          ActivityLog
         ]
       })
     }),
@@ -61,7 +64,8 @@ import { AdminLevelGuard } from './auth/admin-level.guard';
     InstallmentMonthsModule,
     FallbackContactsModule,
     TransactionsModule,
-    DashboardModule
+    DashboardModule,
+    ActivityLogsModule
   ],
   controllers: [AppController],
   providers: [

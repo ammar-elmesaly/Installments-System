@@ -15,13 +15,15 @@ import { Account } from '../accounts/account.entity';
 import { InstallmentPlanStatus } from './enums/installmentPlanStatus.enum';
 import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
 import { PaymentType } from './enums/paymentType.enum';
-
+import { ActivityLogsService } from '../activity_logs/activity_logs.service';
+import { ActivityAction } from '../activity_logs/enums/activityAction.enum';
 @Injectable()
 export class InstallmentPlansService {  
   constructor (
     @InjectRepository(InstallmentPlan)
     private installmentPlansRepository: Repository<InstallmentPlan>,
-    private dataSource: DataSource
+    private dataSource: DataSource,
+    private activityLogsService: ActivityLogsService,
   ) {}
 
   async paginate(
@@ -124,8 +126,11 @@ export class InstallmentPlansService {
       }
       const admin = account.person.admin;
 
-      const client = await queryRunner.manager.findOneBy(Client, {
-        id: createPlanDTO.client_id,
+      const client = await queryRunner.manager.findOne(Client, {
+        where: {
+          id: createPlanDTO.client_id,
+        },
+        relations: { person: true }
       });
 
       if (!client) {
@@ -184,6 +189,21 @@ export class InstallmentPlansService {
 
         await queryRunner.manager.save(installmentMonth);
       }
+
+      await this.activityLogsService.log(
+        {
+          admin,
+          action: ActivityAction.PlanCreated,
+          target_id: savedInstallmentPlan.id,
+          target_label: `${client.person.first_name ?? ''}`.trim() || undefined,
+          metadata: {
+            total_amount: installmentPlan.total_amount,
+            down_payment: createPlanDTO.down_payment,
+            duration_months: createPlanDTO.duration_months,
+          },
+        },
+        queryRunner.manager,
+      );
 
       await queryRunner.commitTransaction();
 
@@ -303,6 +323,21 @@ export class InstallmentPlansService {
 
       const savedTransaction = await queryRunner.manager.save(transaction);
 
+      await this.activityLogsService.log(
+        {
+          admin,
+          action: ActivityAction.PaymentRecorded,
+          target_id: installmentPlan.id,
+          target_label: `${client.person.first_name} ${client.person.last_name}`.trim(),
+          metadata: {
+            amount: newPayment.toNumber(),
+            payment_type: paymentDTO.payment_type,
+            installment_month_id: toPayInstallmentMonth.id,
+          },
+        },
+        queryRunner.manager,
+      );
+
       await queryRunner.commitTransaction();
 
       return {
@@ -416,6 +451,20 @@ export class InstallmentPlansService {
       reversalTransaction.payment_type = lastTransaction.payment_type;
 
       const savedReversal = await queryRunner.manager.save(reversalTransaction);
+
+      await this.activityLogsService.log(
+        {
+          admin,
+          action: ActivityAction.PaymentReversed,
+          target_id: installmentPlan.id,
+          target_label: `${client.person.first_name} ${client.person.last_name}`.trim(),
+          metadata: {
+            reversed_amount: refundAmount.toNumber(),
+            installment_month_id: modifiedMonth.id,
+          },
+        },
+        queryRunner.manager,
+      );
 
       await queryRunner.commitTransaction();
 
