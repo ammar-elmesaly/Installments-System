@@ -40,19 +40,19 @@ export class InstallmentPlansController {
 
   @Post('freeze/:id')
   @MinAdminLevel(AdminLevel.Collector)
-  freeze(@Param('id', ParseUUIDPipe) id: string) {
-    return this.installmentPlansService.freeze(id);
+  freeze(@Param('id', ParseUUIDPipe) id: string, @Req() req) {
+    return this.installmentPlansService.freeze(id, req.user.id);
   }
 
   @Post('unfreeze/:id')
   @MinAdminLevel(AdminLevel.Collector)
-  unfreeze(@Param('id', ParseUUIDPipe) id: string) {
-    return this.installmentPlansService.unfreeze(id);
+  unfreeze(@Param('id', ParseUUIDPipe) id: string, @Req() req) {
+    return this.installmentPlansService.unfreeze(id, req.user.id);
   }
 
   @Patch('notes/:id')
   @MinAdminLevel(AdminLevel.Collector)
-  updateNotes(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateNotesDTO) {
-    return this.installmentPlansService.updateNotes(id, dto.notes)
+  updateNotes(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateNotesDTO, @Req() req) {
+    return this.installmentPlansService.updateNotes(id, dto.notes, req.user.id);
   }
 }

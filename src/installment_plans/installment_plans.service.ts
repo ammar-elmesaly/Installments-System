@@ -481,8 +481,20 @@ export class InstallmentPlansService {
     }
   }
 
-  async freeze(installmentPlanId: string): Promise<InstallmentPlan> {
-    const installmentPlan = await this.installmentPlansRepository.findOneBy({ id: installmentPlanId });
+  async freeze(installmentPlanId: string, accountId: string): Promise<InstallmentPlan> {
+    const account = await this.installmentPlansRepository.manager.findOne(Account, {
+      where: { id: accountId },
+      relations: { person: { admin: true } },
+    });
+    if (!account?.person?.admin) {
+      throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+    }
+    const admin = account.person.admin;
+
+    const installmentPlan = await this.installmentPlansRepository.findOne({
+      where: { id: installmentPlanId },
+      relations: { client: { person: true } },
+    });
 
     if (!installmentPlan) {
       throw new NotFoundException(`InstallmentPlan with ID ${installmentPlanId} not found`);
@@ -492,31 +504,86 @@ export class InstallmentPlansService {
       throw new BadRequestException('Cannot freeze a paid plan.');
     }
 
-    installmentPlan.status = InstallmentPlanStatus.Frozen;
+    if (installmentPlan.status === InstallmentPlanStatus.Frozen) {
+      throw new BadRequestException('This plan is already frozen.');
+    }
 
-    return this.installmentPlansRepository.save(installmentPlan);
+    installmentPlan.status = InstallmentPlanStatus.Frozen;
+    const saved = await this.installmentPlansRepository.save(installmentPlan);
+
+    await this.activityLogsService.log({
+      admin,
+      action: ActivityAction.PlanFrozen,
+      target_id: saved.id,
+      target_label: `${installmentPlan.client.person.first_name} ${installmentPlan.client.person.last_name}`.trim(),
+    });
+
+    return saved;
   }
 
-  async unfreeze(installmentPlanId: string): Promise<InstallmentPlan> {
-    const installmentPlan = await this.installmentPlansRepository.findOneBy({ id: installmentPlanId, status: InstallmentPlanStatus.Frozen });
+  async unfreeze(installmentPlanId: string, accountId: string): Promise<InstallmentPlan> {
+    const account = await this.installmentPlansRepository.manager.findOne(Account, {
+      where: { id: accountId },
+      relations: { person: { admin: true } },
+    });
+    if (!account?.person?.admin) {
+      throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+    }
+    const admin = account.person.admin;
+
+    const installmentPlan = await this.installmentPlansRepository.findOne({
+      where: { id: installmentPlanId, status: InstallmentPlanStatus.Frozen },
+      relations: { client: { person: true } },
+    });
 
     if (!installmentPlan) {
       throw new NotFoundException(`InstallmentPlan with ID ${installmentPlanId} not found`);
     }
 
     installmentPlan.status = InstallmentPlanStatus.Active;
+    const saved = await this.installmentPlansRepository.save(installmentPlan);
 
-    return this.installmentPlansRepository.save(installmentPlan);
+    await this.activityLogsService.log({
+      admin,
+      action: ActivityAction.PlanUnfrozen,
+      target_id: saved.id,
+      target_label: `${installmentPlan.client.person.first_name} ${installmentPlan.client.person.last_name}`.trim(),
+    });
+
+    return saved;
   }
 
-  async updateNotes(installmentPlanId: string, notes: string): Promise<InstallmentPlan> {
-    const installmentPlan = await this.installmentPlansRepository.findOneBy({ id: installmentPlanId });
+  async updateNotes(installmentPlanId: string, notes: string, accountId: string): Promise<InstallmentPlan> {
+    const account = await this.installmentPlansRepository.manager.findOne(Account, {
+      where: { id: accountId },
+      relations: { person: { admin: true } },
+    });
+    if (!account?.person?.admin) {
+      throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+    }
+    const admin = account.person.admin;
+
+    const installmentPlan = await this.installmentPlansRepository.findOne({
+      where: { id: installmentPlanId },
+      relations: { client: { person: true } },
+    });
 
     if (!installmentPlan) {
       throw new NotFoundException(`InstallmentPlan with ID ${installmentPlanId} not found`);
     }
 
+    const previousNotes = installmentPlan.notes;
     installmentPlan.notes = notes;
-    return this.installmentPlansRepository.save(installmentPlan);
+    const saved = await this.installmentPlansRepository.save(installmentPlan);
+
+    await this.activityLogsService.log({
+      admin,
+      action: ActivityAction.PlanNotesUpdated,
+      target_id: saved.id,
+      target_label: `${installmentPlan.client.person.first_name} ${installmentPlan.client.person.last_name}`.trim(),
+      metadata: { previous_notes: previousNotes, new_notes: notes },
+    });
+
+    return saved;
   }
 }
