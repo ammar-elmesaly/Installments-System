@@ -38,7 +38,8 @@ export class AppService {
       });
 
       if (overdueMonths.length === 0) {
-        await this.telegramService.sendAdminNotification('✅ *تقرير الأقساط اليومي:*\nلا يوجد أي متأخرات جديدة اليوم. كل شيء ممتاز!');
+        // Notify telegram that there is no overdue installments:
+        // await this.telegramService.sendAdminNotification('✅ *تقرير الأقساط اليومي:*\nلا يوجد أي متأخرات جديدة اليوم. كل شيء ممتاز!');
         await queryRunner.rollbackTransaction();
         return { message: 'No overdue installments found.' };
       }
