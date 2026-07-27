@@ -259,6 +259,10 @@ export class InstallmentPlansService {
           "installmentPlan.client",
           "client"
         )
+        .innerJoinAndSelect(
+          "client.person",
+          "person"
+        )
         .where("installmentPlan.id = :id", { id: paymentDTO.installment_plan_id })
         .orderBy("installmentMonth.due_date", "ASC")
         .getOne();
@@ -387,7 +391,14 @@ export class InstallmentPlansService {
       const installmentPlan = await queryRunner.manager
         .createQueryBuilder(InstallmentPlan, "installmentPlan")
         .leftJoinAndSelect("installmentPlan.installment_months", "installmentMonth")
-        .innerJoinAndSelect("installmentPlan.client", "client")
+        .innerJoinAndSelect(
+          "installmentPlan.client",
+          "client"
+        )
+        .innerJoinAndSelect(
+          "client.person",
+          "person"
+        )
         .where("installmentPlan.id = :id", { id: installmentPlanId })
         .orderBy("installmentMonth.due_date", "DESC")
         .getOne();
