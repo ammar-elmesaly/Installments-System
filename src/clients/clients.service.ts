@@ -7,6 +7,10 @@ import { Person } from '../people/person.entity';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { QueryRunner } from 'typeorm';
 import { ClientStatus } from './enums/clientStatus.enum';
+import { Account } from '../accounts/account.entity';
+import { Admin } from '../admins/admin.entity';
+import { ActivityLogsService } from '../activity_logs/activity_logs.service';
+import { ActivityAction } from '../activity_logs/enums/activityAction.enum';
 
 @Injectable()
 export class ClientsService {
@@ -14,6 +18,7 @@ export class ClientsService {
     @InjectRepository(Client)
     private clientsRepository: Repository<Client>,
     private dataSource: DataSource,
+    private activityLogsService: ActivityLogsService,
   ) {}
 
   findAll(): Promise<Client[]> {
@@ -28,8 +33,20 @@ export class ClientsService {
     return client;
   }
 
+  private async findAdminByAccountId(manager: EntityManager, accountId: string): Promise<Admin> {
+    const account = await manager.findOne(Account, {
+      where: { id: accountId },
+      relations: { person: { admin: true } },
+    });
+    if (!account?.person?.admin) {
+      throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+    }
+    return account.person.admin;
+  }
+
   async create(
     createClientDto: CreateClientDTO,
+    accountId: string,
     queryRunner: QueryRunner = this.dataSource.createQueryRunner()
   ): Promise<Client> {
     const isLocalRunner = !queryRunner.isTransactionActive;
@@ -40,6 +57,8 @@ export class ClientsService {
     }
 
     try {
+      const admin = await this.findAdminByAccountId(queryRunner.manager, accountId);
+
       const duplicatePerson = await queryRunner.manager.findOne(Person, {
         where: [
           {
@@ -66,6 +85,17 @@ export class ClientsService {
       const client = queryRunner.manager.create(Client, { person: savedPerson });
       const savedClient = await queryRunner.manager.save(client);
 
+      await this.activityLogsService.log(
+        {
+          admin,
+          action: ActivityAction.ClientCreated,
+          target_id: savedClient.id,
+          target_label: `${savedPerson.first_name} ${savedPerson.last_name}`.trim(),
+          metadata: { phone_number: savedPerson.phone_number },
+        },
+        queryRunner.manager,
+      );
+
       if (isLocalRunner) {
         await queryRunner.commitTransaction();
       }
@@ -86,12 +116,15 @@ export class ClientsService {
   async updateById(
     id: string,
     updateClientDTO: UpdateClientDTO,
+    accountId: string,
   ): Promise<Client> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      const admin = await this.findAdminByAccountId(queryRunner.manager, accountId);
+
       const client = await queryRunner.manager.findOne(Client, {
         where: { id },
         relations: { person: true },
@@ -109,7 +142,7 @@ export class ClientsService {
         personFields.third_name !== undefined ||
         personFields.last_name !== undefined;
       const hasPhoneChange = personFields.phone_number !== undefined;
-      
+
       if ((hasNameChange || hasPhoneChange) && client.person) {
         const mergedName = {
           first_name: personFields.first_name ?? client.person.first_name,
@@ -148,6 +181,18 @@ export class ClientsService {
       queryRunner.manager.merge(Client, client, { total_paid_cash, client_status });
 
       const savedClient = await queryRunner.manager.save(Client, client);
+
+      await this.activityLogsService.log(
+        {
+          admin,
+          action: ActivityAction.ClientUpdated,
+          target_id: savedClient.id,
+          target_label: `${client.person.first_name} ${client.person.last_name}`.trim(),
+          metadata: updateClientDTO as Record<string, unknown>,
+        },
+        queryRunner.manager,
+      );
+
       await queryRunner.commitTransaction();
 
       return savedClient;
@@ -160,9 +205,12 @@ export class ClientsService {
   }
 
   async deleteById(
-    id: string, 
+    id: string,
+    accountId: string,
     manager: EntityManager = this.clientsRepository.manager
   ): Promise<Person> {
+    const admin = await this.findAdminByAccountId(manager, accountId);
+
     const client = await manager.getRepository(Client).findOne({
       where: { id },
       relations: { person: true }
@@ -172,7 +220,19 @@ export class ClientsService {
       throw new NotFoundException(`Client with ID ${id} not found`);
     }
 
-    return manager.getRepository(Person).remove(client.person);
+    const removedPerson = await manager.getRepository(Person).remove(client.person);
+
+    await this.activityLogsService.log(
+      {
+        admin,
+        action: ActivityAction.ClientDeleted,
+        target_id: id,
+        target_label: `${client.person.first_name} ${client.person.last_name}`.trim(),
+      },
+      manager,
+    );
+
+    return removedPerson;
   }
 
   paginate(

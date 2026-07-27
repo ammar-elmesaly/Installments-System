@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query, Req } from '@nestjs/common';
 import { ClientsService } from './clients.service';
 import { CreateClientDTO, UpdateClientDTO } from './dto/client.dto';
 import { FindClientsDto } from './dto/find-clients.dto';
@@ -22,22 +22,22 @@ export class ClientsController {
   findById(@Param('id', ParseUUIDPipe) id: string) {
     return this.clientsService.findById(id);
   }
-  
+
   @Post('new')
   @MinAdminLevel(AdminLevel.Collector)
-  create(@Body() createClientDTO: CreateClientDTO) {
-    return this.clientsService.create(createClientDTO);
+  create(@Body() createClientDTO: CreateClientDTO, @Req() req) {
+    return this.clientsService.create(createClientDTO, req.user.id);
   }
 
   @Put('update/:id')
   @MinAdminLevel(AdminLevel.Collector)
-  updateById(@Param('id', ParseUUIDPipe) id: string, @Body() updateClientDTO: UpdateClientDTO) {
-    return this.clientsService.updateById(id, updateClientDTO);
+  updateById(@Param('id', ParseUUIDPipe) id: string, @Body() updateClientDTO: UpdateClientDTO, @Req() req) {
+    return this.clientsService.updateById(id, updateClientDTO, req.user.id);
   }
 
   @Delete('remove/:id')
   @MinAdminLevel(AdminLevel.Collector)
-  removeById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.clientsService.deleteById(id);
+  removeById(@Param('id', ParseUUIDPipe) id: string, @Req() req) {
+    return this.clientsService.deleteById(id, req.user.id);
   }
 }
