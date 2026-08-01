@@ -2,10 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { DataSource, In, LessThan } from 'typeorm';
 import { TelegramService } from './utils/telegram.service';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { InstallmentMonth } from './installment_months/installment_month.entity';
 import { InstallmentMonthStatus } from './installment_months/enums/installmentMonthStatus.enum';
 import Big from 'big.js';
 import { InstallmentPlanStatus } from './installment_plans/enums/installmentPlanStatus.enum';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 @Injectable()
 export class AppService {
@@ -20,7 +25,7 @@ export class AppService {
     await queryRunner.startTransaction();
 
     try {
-      const today = dayjs().startOf('day').toDate();
+      const today = dayjs().tz('Africa/Cairo').startOf('day').utc().toDate();
 
       const overdueMonths = await queryRunner.manager.find(InstallmentMonth, {
         where: {
