@@ -1,98 +1,144 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Installments Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Installments is a backend installment and receivables management API built with NestJS + TypeORM. It supports day-to-day workflows such as client management, installment plan creation, payment collection/unpay, overdue tracking, activity logs, and role-based admin access.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech Stack
 
-## Description
+- Backend: Node.js, NestJS 11, TypeORM, PostgreSQL, JWT auth
+- Tooling: ESLint, Jest (backend), TypeORM migrations
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Prerequisites
 
-## Project setup
+- Node.js (latest LTS recommended)
+- npm
+- PostgreSQL
+
+## Environment Variables (Backend)
+
+Create a `.env` file in `installments/`:
 
 ```bash
-$ npm install
+# App
+PORT=3000
+NODE_ENV=development
+JWT_SECRET=replace_with_a_strong_secret
+
+# Database (Option A: full URL)
+DB_URL=postgresql://user:password@localhost:5432/installments
+
+# Database (Option B: discrete variables)
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=installments
+
+# Optional: cron endpoint protection
+CRON_SECRET_KEY=replace_with_cron_secret
+
+# Optional: Telegram notifications
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_ADMIN_CHAT_ID=your_chat_id
 ```
 
-## Compile and run the project
+Notes:
+
+- If `DB_URL` is provided, it is used directly.
+- In development, DB schema synchronization is enabled (`synchronize: true` when `NODE_ENV != production`).
+- In production, SSL is enabled for PostgreSQL and synchronization is disabled.
+
+## Install Dependencies
+
+Install backend dependencies:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cd installments
+npm ci
 ```
 
-## Run tests
+## Database Setup
+
+Create your PostgreSQL database first, then start the backend.
+
+With default local tools, for example:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+createdb installments
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+If you want explicit migration-driven schema updates, use:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+cd installments
+npm run migration:run
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Development
 
-## Resources
+Start backend API:
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+cd installments
+npm run start:dev
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Default local address:
 
-## Support
+- Backend: http://localhost:3000
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+The backend sets a global API prefix, so endpoints are served under `/api/*`.
 
-## Stay in touch
+## Build
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Backend build:
 
-## License
+```bash
+cd installments
+npm run build
+npm run start:prod
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Scripts
+
+Backend (`installments/package.json`):
+
+- `npm run start:dev` - Run API in watch mode
+- `npm run start:prod` - Run compiled API from `dist/main`
+- `npm run build` - Build backend
+- `npm run lint` - Run ESLint with auto-fix
+- `npm run test` - Run unit tests
+- `npm run test:e2e` - Run e2e tests
+- `npm run test:cov` - Run coverage
+- `npm run migration:generate -- <path>` - Generate a migration
+- `npm run migration:run` - Run pending migrations
+- `npm run migration:revert` - Revert last migration
+
+## API Routing (Backend)
+
+All routes are prefixed with `/api`.
+
+- `/api/auth/login`
+- `/api/auth/signup`
+- `/api/auth/signup/admin`
+- `/api/dashboard`
+- `/api/clients/all`, `/api/clients/:id`, `/api/clients/new`, `/api/clients/update/:id`, `/api/clients/remove/:id`
+- `/api/installment-plans/all`, `/api/installment-plans/new`, `/api/installment-plans/pay`, `/api/installment-plans/unpay`, `/api/installment-plans/freeze/:id`, `/api/installment-plans/unfreeze/:id`, `/api/installment-plans/notes/:id`
+- `/api/transactions/by-plan/:planId`
+- `/api/admins/all`, `/api/admins/:id`, `/api/admins/update/:id`, `/api/admins/remove/:id`
+- `/api/fallback-contacts/new`
+- `/api/activity-log/all`
+- `/api/cron-job` (requires `x-cron-security-token` header matching `CRON_SECRET_KEY`)
+
+## Authorization Model
+
+- JWT guard is applied globally (except routes marked public).
+- Admin role is required for protected routes.
+- Fine-grained access is enforced via admin levels: `SuperAdmin` (2), `Collector` (1), `Auditor` (0).
+
+## Feature Highlights
+
+- Client onboarding and profile updates
+- Installment plan lifecycle (create, freeze/unfreeze, notes)
+- Installment payment and unpay flows with transaction history
+- Dashboard KPIs: net cash flow, receivables, overdue summaries
+- Activity log pagination
