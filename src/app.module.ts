@@ -26,19 +26,24 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { AdminLevelGuard } from './auth/admin-level.guard';
 import { ActivityLogsModule } from './activity_logs/activity_logs.module';
 import { ActivityLog } from './activity_logs/activity_logs.entity';
+import { validate } from '../.env.validation';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate,
+    }),
     TypeOrmModule.forRootAsync({
       useFactory: () => ({
-        type: "postgres",
-        url: process.env.DB_URL 
-          ? process.env.DB_URL 
+        type: 'postgres',
+        url: process.env.DB_URL
+          ? process.env.DB_URL
           : `postgresql://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-        ssl: process.env.NODE_ENV === 'production'
-          ? { rejectUnauthorized: false } 
-          : false,
+        ssl:
+          process.env.NODE_ENV === 'production'
+            ? { rejectUnauthorized: false }
+            : false,
         synchronize: process.env.NODE_ENV !== 'production',
         entities: [
           Person,
@@ -49,12 +54,9 @@ import { ActivityLog } from './activity_logs/activity_logs.entity';
           InstallmentMonth,
           FallbackContact,
           Transaction,
-          ActivityLog
-        ]
-      })
-    }),
-    ConfigModule.forRoot({
-      isGlobal: true,
+          ActivityLog,
+        ],
+      }),
     }),
     ClientsModule,
     AdminsModule,
