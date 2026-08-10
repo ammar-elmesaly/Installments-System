@@ -35,6 +35,17 @@ services:
       DB_USERNAME: installments
       DB_PASSWORD: installments
       DB_NAME: installments
+      
+      # SuperAdmin seed related variables
+
+      SEED_SUPER_ADMIN_EMAIL: admin@example.com
+      SEED_SUPER_ADMIN_PASSWORD: StrongPassword123
+      SEED_SUPER_ADMIN_FIRST_NAME: Super
+      SEED_SUPER_ADMIN_SECOND_NAME: Admin
+      SEED_SUPER_ADMIN_THIRD_NAME: User
+      SEED_SUPER_ADMIN_LAST_NAME: Account
+      SEED_SUPER_ADMIN_PHONE_NUMBER: 05900000000
+      
     ports:
       - "3000:3000"
 
