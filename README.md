@@ -73,6 +73,44 @@ cd installments
 npm run migration:run
 ```
 
+## Super Admin Seeder
+
+Seed or repair the canonical Super Admin account with these environment variables:
+
+```bash
+SEED_SUPER_ADMIN_EMAIL=admin@example.com
+SEED_SUPER_ADMIN_PASSWORD=StrongPassword123
+SEED_SUPER_ADMIN_FIRST_NAME=Super
+SEED_SUPER_ADMIN_SECOND_NAME=Admin
+SEED_SUPER_ADMIN_THIRD_NAME=User
+SEED_SUPER_ADMIN_LAST_NAME=Account
+SEED_SUPER_ADMIN_PHONE_NUMBER=05900000000
+```
+
+Optional fields:
+
+```bash
+SEED_SUPER_ADMIN_NICK_NAME=
+SEED_SUPER_ADMIN_PROFESSION=
+SEED_SUPER_ADMIN_ADDRESS=
+SEED_SUPER_ADMIN_IMAGE_PATH=
+```
+
+Run it in development:
+
+```bash
+cd installments
+npm run seed:super-admin
+```
+
+Run it after building for production use:
+
+```bash
+cd installments
+npm run build
+npm run seed:super-admin:prod
+```
+
 ## Development
 
 Start backend API:
@@ -84,7 +122,7 @@ npm run start:dev
 
 Default local address:
 
-- Backend: http://localhost:3000
+- Backend: `http://localhost:3000`
 
 The backend sets a global API prefix, so endpoints are served under `/api/*`.
 
@@ -140,6 +178,8 @@ Backend (`installments/package.json`):
 - `npm run migration:generate -- <path>` - Generate a migration
 - `npm run migration:run` - Run pending migrations
 - `npm run migration:revert` - Revert last migration
+- `npm run seed:super-admin` - Seed or repair the Super Admin account in development
+- `npm run seed:super-admin:prod` - Seed or repair the Super Admin account from compiled output
 
 ## API Routing (Backend)
 

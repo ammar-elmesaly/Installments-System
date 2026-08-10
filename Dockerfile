@@ -21,6 +21,8 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/env.validation.ts ./env.validation.ts
 COPY --from=build /app/datasource.ts ./datasource.ts
 
+RUN npm run seed:super-admin:prod
+
 EXPOSE 3000
 
 CMD ["node", "dist/src/main.js"]
