@@ -26,7 +26,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { AdminLevelGuard } from './auth/admin-level.guard';
 import { ActivityLogsModule } from './activity_logs/activity_logs.module';
 import { ActivityLog } from './activity_logs/activity_logs.entity';
-import { validate } from '../.env.validation';
+import { validate } from '../env.validation';
+import { AuthService } from './auth/auth.service';
 
 @Module({
   imports: [

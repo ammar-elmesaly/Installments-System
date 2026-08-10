@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: installments-db
+    restart: always
+    environment:
+      POSTGRES_DB: installments
+      POSTGRES_USER: installments
+      POSTGRES_PASSWORD: installments
+    ports:
+      - "8000:5432"
+    volumes:
+      - installments_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U installments -d installments"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: installments-api
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      JWT_SECRET: replace_with_a_strong_secret
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: installments
+      DB_PASSWORD: installments
+      DB_NAME: installments
+    ports:
+      - "3000:3000"
+
+volumes:
+  installments_postgres_data:

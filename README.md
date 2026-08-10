@@ -98,12 +98,40 @@ npm run build
 npm run start:prod
 ```
 
+## Docker
+
+Build and run the API with PostgreSQL:
+
+```bash
+cd installments
+docker compose up --build
+```
+
+The compose file starts:
+
+- `db` on port `5432`
+- `api` on port `3000`
+
+Docker defaults are set for local development in `docker-compose.yml`. If you want to use your own values, edit the `environment` block there or replace it with an `.env`-driven setup.
+
+To stop and remove the containers:
+
+```bash
+docker compose down
+```
+
+To also remove the database volume:
+
+```bash
+docker compose down -v
+```
+
 ## Scripts
 
 Backend (`installments/package.json`):
 
 - `npm run start:dev` - Run API in watch mode
-- `npm run start:prod` - Run compiled API from `dist/main`
+- `npm run start:prod` - Run compiled API from `dist/src/main`
 - `npm run build` - Build backend
 - `npm run lint` - Run ESLint with auto-fix
 - `npm run test` - Run unit tests

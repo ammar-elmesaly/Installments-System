@@ -6,7 +6,7 @@ import { CreateClientDTO } from "../../clients/dto/client.dto";
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&#_\.\-]{8,}$/;
 
-export class CreateAccountDTO {
+class CreateAccountDTO {
   @IsNotEmpty()
   @IsEmail()
   readonly email: string;
