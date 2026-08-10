@@ -26,6 +26,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    command: sh -c "npm run seed:super-admin:prod && npm run start:prod"
     environment:
       NODE_ENV: development
       PORT: 3000

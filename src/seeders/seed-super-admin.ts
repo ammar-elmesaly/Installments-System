@@ -8,6 +8,8 @@ async function bootstrap() {
 
   await AppDataSource.initialize();
 
+  await AppDataSource.synchronize();
+
   try {
     const seeder = new SuperAdminSeeder(AppDataSource, config);
     await seeder.seed();
