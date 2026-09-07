@@ -6,7 +6,7 @@ import { PartialType } from "@nestjs/mapped-types";
 export class CreateAdminDTO extends CreatePersonDTO {
   @IsOptional()
   @IsEnum(AdminLevel)
-  readonly admin_level: AdminLevel;
+  readonly admin_level?: AdminLevel;
 }
 
 export class UpdateAdminDTO extends PartialType(CreateAdminDTO) {}

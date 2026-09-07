@@ -29,11 +29,11 @@ export class CreatePersonDTO {
 
   @IsString()
   @IsOptional()
-  readonly profession: string;
+  readonly profession?: string;
 
   @IsString()
   @IsOptional()
-  readonly address: string;
+  readonly address?: string;
 
   @IsString()
   @IsOptional()
