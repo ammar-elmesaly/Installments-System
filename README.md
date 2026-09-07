@@ -111,6 +111,22 @@ npm run build
 npm run seed:super-admin:prod
 ```
 
+## Bulk Client Seeder
+
+Generate deterministic Arabic client accounts in batches:
+
+```bash
+SEED_CLIENT_COUNT=50000 \
+SEED_CLIENT_BATCH_SIZE=1000 \
+SEED_CLIENT_PASSWORD=ClientPassword123! \
+npm run seed:clients
+```
+
+The default count is `50000`, the default batch size is `1000`, and the default
+password is `ClientPassword123!`. Generated emails and phone numbers are
+deterministic, so rerunning the command skips existing generated accounts.
+Names are generated from Arabic name pools with a unique Arabic index suffix.
+
 ## Development
 
 Start backend API:

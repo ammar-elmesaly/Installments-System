@@ -11,7 +11,7 @@ export class JwtGuard extends AuthGuard('jwt') {
     super();
   }
 
-  // This basically bypasses @Public() routes from Jwt Authentication
+  // This bypasses @Public() routes from Jwt Authentication
   canActivate(context: ExecutionContext) {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
