@@ -8,7 +8,7 @@ import { ClientStatus } from '../clients/enums/clientStatus.enum';
 import { Person } from '../people/person.entity';
 import { createArabicClient, GeneratedClient } from './factories/client.factory';
 
-const defaultClientCount = 50000;
+const defaultClientCount = 10000;
 const defaultBatchSize = 1000;
 const defaultPassword = 'ClientPassword123!';
 
