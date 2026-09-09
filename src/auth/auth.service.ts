@@ -35,10 +35,17 @@ export class AuthService {
     }
 
     let adminLevel: AdminLevel;
+    let name = account.email;
 
     if (account.role === Role.Admin) {
       const admin = await this.accountsService.getAdminByAccountId(account.id);
       adminLevel = admin.admin_level;
+      name = [
+        admin.person.first_name,
+        admin.person.second_name,
+        admin.person.third_name,
+        admin.person.last_name,
+      ].filter(Boolean).join(' ');
     }
 
     account.token_version += 1;
@@ -48,6 +55,7 @@ export class AuthService {
     const payload: PayloadType = {
       token_version: account.token_version,
       email: account.email,
+      name,
       role: account.role,
       admin_level: adminLevel,
       id: account.id

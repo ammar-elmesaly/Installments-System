@@ -75,6 +75,7 @@ describe('AuthService', () => {
     expect(jwtService.sign).toHaveBeenCalledWith({
       token_version: 3,
       email: login.email,
+      name: login.email,
       role: Role.Client,
       admin_level: undefined,
       id: 'account-id',
@@ -91,7 +92,15 @@ describe('AuthService', () => {
       token_version: 0,
     };
     accountsService.findByEmail.mockResolvedValue(account as any);
-    accountsService.getAdminByAccountId.mockResolvedValue({ admin_level: AdminLevel.SuperAdmin } as any);
+    accountsService.getAdminByAccountId.mockResolvedValue({
+      admin_level: AdminLevel.SuperAdmin,
+      person: {
+        first_name: 'Admin',
+        second_name: 'Test',
+        third_name: 'Middle',
+        last_name: 'User',
+      },
+    } as any);
     compareMock.mockResolvedValue(true);
     jwtService.sign.mockReturnValue('admin-token');
 
@@ -99,6 +108,7 @@ describe('AuthService', () => {
     expect(accountsService.getAdminByAccountId).toHaveBeenCalledWith('admin-account-id');
     expect(jwtService.sign).toHaveBeenCalledWith(expect.objectContaining({
       role: Role.Admin,
+      name: 'Admin Test Middle User',
       admin_level: AdminLevel.SuperAdmin,
       token_version: 1,
     }));

@@ -189,6 +189,9 @@ export class AccountsService {
       throw new NotFoundException(`No Admin associated with this account was found`);
     }
 
-    return account.person.admin;
+    return {
+      ...account.person.admin,
+      person: account.person
+    };
   }
 }
