@@ -226,3 +226,4 @@ All routes are prefixed with `/api`.
 - Installment payment and unpay flows with transaction history
 - Dashboard KPIs: net cash flow, receivables, overdue summaries
 - Activity log pagination
+
