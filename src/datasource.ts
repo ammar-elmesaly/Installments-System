@@ -1,11 +1,11 @@
 // datasource.ts
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
-import { Initial1784040177354 } from './src/migrations/1784040177354-Initial';
-import { InstallmentPlan1784214047886 } from './src/migrations/1784214047886-InstallmentPlan';
-import { AllowClientRemoval1784239272259 } from './src/migrations/1784239272259-AllowClientRemoval';
-import { ChangeAdminPermissions1784495604516 } from './src/migrations/1784495604516-ChangeAdminPermissions';
-import { AddActivityLogsEntity1784984263299 } from './src/migrations/1784984263299-AddActivityLogsEntity';
+import { Initial1784040177354 } from './migrations/1784040177354-Initial';
+import { InstallmentPlan1784214047886 } from './migrations/1784214047886-InstallmentPlan';
+import { AllowClientRemoval1784239272259 } from './migrations/1784239272259-AllowClientRemoval';
+import { ChangeAdminPermissions1784495604516 } from './migrations/1784495604516-ChangeAdminPermissions';
+import { AddActivityLogsEntity1784984263299 } from './migrations/1784984263299-AddActivityLogsEntity';
 
 // Load .env file variables
 config();

@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { AppDataSource } from '../../datasource';
+import { AppDataSource } from '../datasource';
 import { loadSuperAdminSeedConfig } from './super-admin.seed.config';
 import { SuperAdminSeeder } from './super-admin.seeder';
 

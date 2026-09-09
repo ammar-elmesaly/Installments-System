@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import * as bcrypt from 'bcrypt';
-import { AppDataSource } from '../../datasource';
+import { AppDataSource } from '../datasource';
 import { Account } from '../accounts/account.entity';
 import { Role } from '../accounts/enums/role';
 import { Client } from '../clients/client.entity';
