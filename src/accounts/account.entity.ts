@@ -1,9 +1,10 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, Index, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Person } from "../people/person.entity";
 import { Role } from "./enums/role";
 import { Exclude } from "class-transformer";
 
 @Entity('accounts')
+@Index(['person'])
 export class Account {
   @PrimaryGeneratedColumn('uuid')
   id: string;

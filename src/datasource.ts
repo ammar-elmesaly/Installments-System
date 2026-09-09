@@ -6,6 +6,7 @@ import { InstallmentPlan1784214047886 } from './migrations/1784214047886-Install
 import { AllowClientRemoval1784239272259 } from './migrations/1784239272259-AllowClientRemoval';
 import { ChangeAdminPermissions1784495604516 } from './migrations/1784495604516-ChangeAdminPermissions';
 import { AddActivityLogsEntity1784984263299 } from './migrations/1784984263299-AddActivityLogsEntity';
+import { AddEntityIndexes1788950000000 } from './migrations/1788950000000-AddEntityIndexes';
 
 // Load .env file variables
 config();
@@ -29,6 +30,7 @@ export const AppDataSource = new DataSource({
     InstallmentPlan1784214047886,
     AllowClientRemoval1784239272259,
     ChangeAdminPermissions1784495604516,
-    AddActivityLogsEntity1784984263299
+    AddActivityLogsEntity1784984263299,
+    AddEntityIndexes1788950000000
   ],
 });

@@ -1,10 +1,12 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Client } from "../clients/client.entity";
 import { InstallmentPlanStatus } from "./enums/installmentPlanStatus.enum";
 import { InstallmentMonth } from "../installment_months/installment_month.entity";
 import { Transaction } from "../transactions/transaction.entity";
 
 @Entity('installment_plans')
+@Index(['client'])
+@Index(['status', 'id'])
 export class InstallmentPlan {
   @PrimaryGeneratedColumn('uuid')
   id: string;

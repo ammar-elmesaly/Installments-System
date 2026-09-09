@@ -1,10 +1,14 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Admin } from "../admins/admin.entity";
 import { PaymentType } from "../installment_plans/enums/paymentType.enum";
 import { InstallmentPlan } from "../installment_plans/installment_plan.entity";
 import { InstallmentMonth } from "../installment_months/installment_month.entity";
 
 @Entity('transactions')
+@Index(['admin'])
+@Index(['installment_plan', 'created_at'])
+@Index(['installment_month'])
+@Index(['created_at'])
 export class Transaction {
   @PrimaryGeneratedColumn('uuid')
   id: string;

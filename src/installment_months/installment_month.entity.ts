@@ -1,10 +1,12 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { InstallmentPlan } from "../installment_plans/installment_plan.entity";
 import dayjs from 'dayjs';
 import { InstallmentMonthStatus } from "./enums/installmentMonthStatus.enum";
 import { Transaction } from "../transactions/transaction.entity";
 
 @Entity('installment_months')
+@Index(['installment_plan', 'due_date'])
+@Index(['status', 'due_date'])
 export class InstallmentMonth {
   @PrimaryGeneratedColumn('uuid')
   id: string;
