@@ -10,6 +10,7 @@
     "test",
     "dist",
     "**/*spec.ts",
-    "*.ts"
+    "*.ts",
+    "api"
   ]
 }
