@@ -1,6 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AccountsService } from '../accounts/accounts.service';
-import { CreateAdminAccountDTO, CreateClientAccountDTO } from '../accounts/dto/account.dto';
+import {
+  CreateAdminAccountDTO,
+  CreateClientAccountDTO,
+} from '../accounts/dto/account.dto';
 import { LoginDTO } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -10,9 +13,9 @@ import { PayloadType } from './types/payload.type';
 
 @Injectable()
 export class AuthService {
-  constructor (
+  constructor(
     private accountsService: AccountsService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
   signup(createAccountDTO: CreateClientAccountDTO) {
@@ -26,12 +29,19 @@ export class AuthService {
   async login(loginDTO: LoginDTO): Promise<{ access_token: string }> {
     const account = await this.accountsService.findByEmail(
       loginDTO,
-      new UnauthorizedException('Wrong email or password, please recheck your credentials')
+      new UnauthorizedException(
+        'Wrong email or password, please recheck your credentials',
+      ),
     );
 
-    const validPassword = await bcrypt.compare(loginDTO.password, account.password_hash);
+    const validPassword = await bcrypt.compare(
+      loginDTO.password,
+      account.password_hash,
+    );
     if (!validPassword) {
-      throw new UnauthorizedException('Wrong email or password, please recheck your credentials');
+      throw new UnauthorizedException(
+        'Wrong email or password, please recheck your credentials',
+      );
     }
 
     let adminLevel: AdminLevel;
@@ -45,12 +55,17 @@ export class AuthService {
         admin.person.second_name,
         admin.person.third_name,
         admin.person.last_name,
-      ].filter(Boolean).join(' ');
+      ]
+        .filter(Boolean)
+        .join(' ');
     }
 
     account.token_version += 1;
 
-    await this.accountsService.updateTokenVersion(account.id, account.token_version);
+    await this.accountsService.updateTokenVersion(
+      account.id,
+      account.token_version,
+    );
 
     const payload: PayloadType = {
       token_version: account.token_version,
@@ -58,11 +73,11 @@ export class AuthService {
       name,
       role: account.role,
       admin_level: adminLevel,
-      id: account.id
+      id: account.id,
     };
 
     return {
-      access_token: this.jwtService.sign(payload)
-    }
+      access_token: this.jwtService.sign(payload),
+    };
   }
 }

@@ -1,6 +1,9 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAdminAccountDTO, CreateClientAccountDTO } from '../accounts/dto/account.dto';
+import {
+  CreateAdminAccountDTO,
+  CreateClientAccountDTO,
+} from '../accounts/dto/account.dto';
 import { LoginDTO } from './dto/login.dto';
 import { Public } from './public.decorator';
 import { MinAdminLevel } from './admin-level.decorator';
@@ -8,8 +11,7 @@ import { AdminLevel } from '../admins/enums/adminLevel.enum';
 
 @Controller('auth')
 export class AuthController {
-  constructor (private authService: AuthService) {}
-
+  constructor(private authService: AuthService) {}
 
   @Post('signup/admin')
   @MinAdminLevel(AdminLevel.SuperAdmin)
@@ -22,12 +24,10 @@ export class AuthController {
   createClient(@Body() createAccountDTO: CreateClientAccountDTO) {
     return this.authService.signup(createAccountDTO);
   }
-  
+
   @Public()
   @Post('login')
-  login(
-    @Body() loginDTO: LoginDTO
-  ) {
-    return this.authService.login(loginDTO); 
+  login(@Body() loginDTO: LoginDTO) {
+    return this.authService.login(loginDTO);
   }
 }

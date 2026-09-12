@@ -68,7 +68,7 @@ import { AuthService } from './auth/auth.service';
     FallbackContactsModule,
     TransactionsModule,
     DashboardModule,
-    ActivityLogsModule
+    ActivityLogsModule,
   ],
   controllers: [AppController],
   providers: [

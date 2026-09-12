@@ -16,13 +16,13 @@ const isProduction = process.env.NODE_ENV === 'production';
 export const AppDataSource = new DataSource({
   type: 'postgres',
   // Use DB_URL if available; otherwise, construct it
-  url: process.env.DB_URL 
-    ? process.env.DB_URL 
+  url: process.env.DB_URL
+    ? process.env.DB_URL
     : `postgresql://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
   ssl: isProduction ? { rejectUnauthorized: false } : false,
   synchronize: false, // Must be false when generating migrations!
-  
-  // Point to the compiled JS files (for production/running) 
+
+  // Point to the compiled JS files (for production/running)
   // and TS files (for CLI generation)
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
   migrations: [
@@ -31,6 +31,6 @@ export const AppDataSource = new DataSource({
     AllowClientRemoval1784239272259,
     ChangeAdminPermissions1784495604516,
     AddActivityLogsEntity1784984263299,
-    AddEntityIndexes1788950000000
+    AddEntityIndexes1788950000000,
   ],
 });

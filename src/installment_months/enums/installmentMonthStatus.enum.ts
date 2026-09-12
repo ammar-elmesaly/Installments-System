@@ -3,5 +3,5 @@ export enum InstallmentMonthStatus {
   Paid = 'PAID',
   PartiallyPaid = 'PARTIALLY_PAID',
   Overdue = 'OVERDUE',
-  Waived = 'WAIVED'
+  Waived = 'WAIVED',
 }

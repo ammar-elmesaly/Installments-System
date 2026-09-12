@@ -1,9 +1,22 @@
-import { Column, CreateDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
-import { Client } from "../clients/client.entity";
-import { Admin } from "../admins/admin.entity";
-import { Account } from "../accounts/account.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+  UpdateDateColumn,
+} from 'typeorm';
+import { Client } from '../clients/client.entity';
+import { Admin } from '../admins/admin.entity';
+import { Account } from '../accounts/account.entity';
 
-@Unique('UQ_full_name', ['first_name', 'second_name', 'third_name', 'last_name'])
+@Unique('UQ_full_name', [
+  'first_name',
+  'second_name',
+  'third_name',
+  'last_name',
+])
 @Entity('people')
 export abstract class Person {
   @PrimaryGeneratedColumn('uuid')
@@ -42,21 +55,12 @@ export abstract class Person {
   @UpdateDateColumn({ type: 'timestamptz', nullable: true })
   updated_at?: Date;
 
-  @OneToOne(
-    () => Client,
-    client => client.person
-  )
+  @OneToOne(() => Client, (client) => client.person)
   client: Client;
 
-  @OneToOne(
-    () => Admin,
-    admin => admin.person
-  )
+  @OneToOne(() => Admin, (admin) => admin.person)
   admin: Admin;
 
-  @OneToOne(
-    () => Account,
-    account => account.person
-  )
+  @OneToOne(() => Account, (account) => account.person)
   account: Account;
 }

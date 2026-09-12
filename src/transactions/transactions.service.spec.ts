@@ -47,10 +47,12 @@ describe('TransactionsService', () => {
 
     await expect(service.findByPlan('plan-id', 25)).resolves.toEqual([]);
 
-    expect(repository.find).toHaveBeenCalledWith(expect.objectContaining({
-      where: { installment_plan: { id: 'plan-id' } },
-      take: 25,
-    }));
+    expect(repository.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { installment_plan: { id: 'plan-id' } },
+        take: 25,
+      }),
+    );
   });
 
   it('propagates repository errors', async () => {

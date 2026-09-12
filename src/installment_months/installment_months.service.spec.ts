@@ -96,7 +96,11 @@ describe('InstallmentMonthsService', () => {
       due_date: dueDate,
       expected_amount: expectedAmount,
     };
-    const month = { id: 'month-id', due_date: dueDate, expected_amount: expectedAmount } as any;
+    const month = {
+      id: 'month-id',
+      due_date: dueDate,
+      expected_amount: expectedAmount,
+    } as any;
     queryRunner.isTransactionActive = false;
     queryRunner.manager.create.mockReturnValue(month);
     queryRunner.manager.save.mockResolvedValue(month);
@@ -104,11 +108,14 @@ describe('InstallmentMonthsService', () => {
 
     await service.create(dto);
 
-    expect(queryRunner.manager.create).toHaveBeenCalledWith(InstallmentMonth, expect.objectContaining({
-      due_date: dueDate,
-      expected_amount: expectedAmount,
-      installment_plan: { id: 'plan-id' },
-    }));
+    expect(queryRunner.manager.create).toHaveBeenCalledWith(
+      InstallmentMonth,
+      expect.objectContaining({
+        due_date: dueDate,
+        expected_amount: expectedAmount,
+        installment_plan: { id: 'plan-id' },
+      }),
+    );
   });
 });
 

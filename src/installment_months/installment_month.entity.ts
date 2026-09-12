@@ -1,8 +1,18 @@
-import { BeforeInsert, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { InstallmentPlan } from "../installment_plans/installment_plan.entity";
+import {
+  BeforeInsert,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { InstallmentPlan } from '../installment_plans/installment_plan.entity';
 import dayjs from 'dayjs';
-import { InstallmentMonthStatus } from "./enums/installmentMonthStatus.enum";
-import { Transaction } from "../transactions/transaction.entity";
+import { InstallmentMonthStatus } from './enums/installmentMonthStatus.enum';
+import { Transaction } from '../transactions/transaction.entity';
 
 @Entity('installment_months')
 @Index(['installment_plan', 'due_date'])
@@ -23,21 +33,22 @@ export class InstallmentMonth {
   @UpdateDateColumn({ type: 'timestamptz', nullable: true })
   updated_at: Date;
 
-  @Column({ type: 'enum', enum: InstallmentMonthStatus, default: InstallmentMonthStatus.Pending })
+  @Column({
+    type: 'enum',
+    enum: InstallmentMonthStatus,
+    default: InstallmentMonthStatus.Pending,
+  })
   status: InstallmentMonthStatus;
 
   @ManyToOne(
     () => InstallmentPlan,
-    installment_plan => installment_plan.installment_months,
-    { nullable: false, onDelete: 'CASCADE' }
+    (installment_plan) => installment_plan.installment_months,
+    { nullable: false, onDelete: 'CASCADE' },
   )
   @JoinColumn({ name: 'installment_plan_id' })
   installment_plan: InstallmentPlan;
 
-  @OneToMany(
-    () => Transaction,
-    transaction => transaction.installment_month
-  )
+  @OneToMany(() => Transaction, (transaction) => transaction.installment_month)
   transactions: Transaction[];
 
   @BeforeInsert()

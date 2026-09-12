@@ -1,10 +1,16 @@
-import { CanActivate, ExecutionContext, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 @Injectable()
 export class CronGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
-    
+
     const cronHeader = request.headers['x-cron-security-token'];
     const expectedSecret = process.env.CRON_SECRET_KEY;
 

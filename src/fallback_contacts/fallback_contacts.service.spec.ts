@@ -7,7 +7,12 @@ import { FallbackContact } from './fallback_contact.entity';
 describe('FallbackContactsService', () => {
   let service: FallbackContactsService;
   let dataSource: { createQueryRunner: jest.Mock };
-  let repository: { findOne: jest.Mock; find: jest.Mock; createQueryBuilder: jest.Mock; manager: any };
+  let repository: {
+    findOne: jest.Mock;
+    find: jest.Mock;
+    createQueryBuilder: jest.Mock;
+    manager: any;
+  };
   let fallbackContactsService: jest.Mocked<FallbackContactsService>;
 
   beforeEach(async () => {

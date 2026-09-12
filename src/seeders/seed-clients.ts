@@ -6,7 +6,10 @@ import { Role } from '../accounts/enums/role';
 import { Client } from '../clients/client.entity';
 import { ClientStatus } from '../clients/enums/clientStatus.enum';
 import { Person } from '../people/person.entity';
-import { createArabicClient, GeneratedClient } from './factories/client.factory';
+import {
+  createArabicClient,
+  GeneratedClient,
+} from './factories/client.factory';
 
 const defaultClientCount = 10000;
 const defaultBatchSize = 1000;
@@ -24,7 +27,10 @@ function readPositiveInteger(name: string, fallback: number): number {
 
 async function seedClients(): Promise<void> {
   const count = readPositiveInteger('SEED_CLIENT_COUNT', defaultClientCount);
-  const batchSize = readPositiveInteger('SEED_CLIENT_BATCH_SIZE', defaultBatchSize);
+  const batchSize = readPositiveInteger(
+    'SEED_CLIENT_BATCH_SIZE',
+    defaultBatchSize,
+  );
   const password = process.env.SEED_CLIENT_PASSWORD ?? defaultPassword;
   const passwordHash = await bcrypt.hash(password, 12);
 
@@ -42,9 +48,13 @@ async function seedClients(): Promise<void> {
     const existingAccounts = await accountRepository
       .createQueryBuilder('account')
       .select('account.email', 'email')
-      .where('account.email LIKE :emailPrefix', { emailPrefix: 'client-%@example.com' })
+      .where('account.email LIKE :emailPrefix', {
+        emailPrefix: 'client-%@example.com',
+      })
       .getRawMany<{ email: string }>();
-    const existingEmails = new Set(existingAccounts.map(account => account.email));
+    const existingEmails = new Set(
+      existingAccounts.map((account) => account.email),
+    );
     const people: Person[] = [];
     const generatedClients: GeneratedClient[] = [];
 
@@ -62,23 +72,29 @@ async function seedClients(): Promise<void> {
     }
 
     await personRepository.save(people, { chunk: batchSize });
-    const clients = people.map(person => clientRepository.create({
-      person: { id: person.id } as Person,
-      total_paid_cash: 0,
-      client_status: ClientStatus.Active,
-    }));
-    const accounts = people.map((person, index) => accountRepository.create({
-      person: { id: person.id } as Person,
-      email: generatedClients[index].email,
-      password_hash: passwordHash,
-      role: Role.Client,
-    }));
+    const clients = people.map((person) =>
+      clientRepository.create({
+        person: { id: person.id } as Person,
+        total_paid_cash: 0,
+        client_status: ClientStatus.Active,
+      }),
+    );
+    const accounts = people.map((person, index) =>
+      accountRepository.create({
+        person: { id: person.id } as Person,
+        email: generatedClients[index].email,
+        password_hash: passwordHash,
+        role: Role.Client,
+      }),
+    );
 
     await clientRepository.save(clients, { chunk: batchSize });
     await accountRepository.save(accounts, { chunk: batchSize });
 
     await queryRunner.commitTransaction();
-    console.log(`[seed-clients] Added ${people.length} of ${count} requested clients`);
+    console.log(
+      `[seed-clients] Added ${people.length} of ${count} requested clients`,
+    );
   } catch (error) {
     await queryRunner.rollbackTransaction();
     throw error;
@@ -88,7 +104,7 @@ async function seedClients(): Promise<void> {
   }
 }
 
-seedClients().catch(error => {
+seedClients().catch((error) => {
   console.error('[seed-clients] Seeding failed');
   console.error(error);
   process.exitCode = 1;

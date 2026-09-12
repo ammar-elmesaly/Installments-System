@@ -1,9 +1,15 @@
-import { IsOptional, IsString, IsUUID, Length, MaxLength } from "class-validator";
+import {
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateFallbackContactDTO {
   @IsUUID()
   client_id: string;
-  
+
   @IsString()
   @MaxLength(100)
   readonly name: string;
@@ -13,7 +19,9 @@ export class CreateFallbackContactDTO {
   readonly relationship: string;
 
   @IsString()
-  @Length(11, 11, { message: "phone_number must be exactly 11 characters long" })
+  @Length(11, 11, {
+    message: 'phone_number must be exactly 11 characters long',
+  })
   readonly phone_number: string;
 
   @IsString()

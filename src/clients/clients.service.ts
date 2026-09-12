@@ -1,10 +1,18 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Client } from './client.entity';
 import { CreateClientDTO, UpdateClientDTO } from './dto/client.dto';
 import { Brackets, DataSource, EntityManager, Repository } from 'typeorm';
 import { Person } from '../people/person.entity';
-import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import {
+  IPaginationOptions,
+  paginate,
+  Pagination,
+} from 'nestjs-typeorm-paginate';
 import { QueryRunner } from 'typeorm';
 import { ClientStatus } from './enums/clientStatus.enum';
 import { Account } from '../accounts/account.entity';
@@ -26,20 +34,28 @@ export class ClientsService {
   }
 
   async findById(id: string): Promise<Client> {
-    const client = await this.clientsRepository.findOne({ where: { id }, relations: { person: true } });
+    const client = await this.clientsRepository.findOne({
+      where: { id },
+      relations: { person: true },
+    });
     if (!client) {
       throw new NotFoundException(`Client with ID ${id} not found`);
     }
     return client;
   }
 
-  private async findAdminByAccountId(manager: EntityManager, accountId: string): Promise<Admin> {
+  private async findAdminByAccountId(
+    manager: EntityManager,
+    accountId: string,
+  ): Promise<Admin> {
     const account = await manager.findOne(Account, {
       where: { id: accountId },
       relations: { person: { admin: true } },
     });
     if (!account?.person?.admin) {
-      throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+      throw new NotFoundException(
+        `Admin associated with account ID ${accountId} not found`,
+      );
     }
     return account.person.admin;
   }
@@ -47,7 +63,7 @@ export class ClientsService {
   async create(
     createClientDto: CreateClientDTO,
     accountId: string,
-    queryRunner: QueryRunner = this.dataSource.createQueryRunner()
+    queryRunner: QueryRunner = this.dataSource.createQueryRunner(),
   ): Promise<Client> {
     const isLocalRunner = !queryRunner.isTransactionActive;
 
@@ -57,7 +73,10 @@ export class ClientsService {
     }
 
     try {
-      const admin = await this.findAdminByAccountId(queryRunner.manager, accountId);
+      const admin = await this.findAdminByAccountId(
+        queryRunner.manager,
+        accountId,
+      );
 
       const duplicatePerson = await queryRunner.manager.findOne(Person, {
         where: [
@@ -73,16 +92,22 @@ export class ClientsService {
 
       if (duplicatePerson) {
         if (duplicatePerson.phone_number === createClientDto.phone_number) {
-          throw new ConflictException('This phone number is already registered.');
+          throw new ConflictException(
+            'This phone number is already registered.',
+          );
         }
 
-        throw new ConflictException('A person with this exact full name already exists.');
+        throw new ConflictException(
+          'A person with this exact full name already exists.',
+        );
       }
 
       const person = queryRunner.manager.create(Person, createClientDto);
       const savedPerson = await queryRunner.manager.save(person);
 
-      const client = queryRunner.manager.create(Client, { person: savedPerson });
+      const client = queryRunner.manager.create(Client, {
+        person: savedPerson,
+      });
       const savedClient = await queryRunner.manager.save(client);
 
       await this.activityLogsService.log(
@@ -90,7 +115,8 @@ export class ClientsService {
           admin,
           action: ActivityAction.ClientCreated,
           target_id: savedClient.id,
-          target_label: `${savedPerson.first_name} ${savedPerson.last_name}`.trim(),
+          target_label:
+            `${savedPerson.first_name} ${savedPerson.last_name}`.trim(),
           metadata: { phone_number: savedPerson.phone_number },
         },
         queryRunner.manager,
@@ -100,7 +126,6 @@ export class ClientsService {
         await queryRunner.commitTransaction();
       }
       return savedClient;
-
     } catch (error) {
       if (isLocalRunner) {
         await queryRunner.rollbackTransaction();
@@ -123,7 +148,10 @@ export class ClientsService {
     await queryRunner.startTransaction();
 
     try {
-      const admin = await this.findAdminByAccountId(queryRunner.manager, accountId);
+      const admin = await this.findAdminByAccountId(
+        queryRunner.manager,
+        accountId,
+      );
 
       const client = await queryRunner.manager.findOne(Client, {
         where: { id },
@@ -134,7 +162,8 @@ export class ClientsService {
         throw new NotFoundException(`Client with ID ${id} not found`);
       }
 
-      const { total_paid_cash, client_status, ...personFields } = updateClientDTO;
+      const { total_paid_cash, client_status, ...personFields } =
+        updateClientDTO;
 
       const hasNameChange =
         personFields.first_name !== undefined ||
@@ -150,7 +179,8 @@ export class ClientsService {
           third_name: personFields.third_name ?? client.person.third_name,
           last_name: personFields.last_name ?? client.person.last_name,
         };
-        const mergedPhone = personFields.phone_number ?? client.person.phone_number;
+        const mergedPhone =
+          personFields.phone_number ?? client.person.phone_number;
 
         const duplicatePerson = await queryRunner.manager
           .createQueryBuilder(Person, 'person')
@@ -160,16 +190,22 @@ export class ClientsService {
               qb.where(
                 'person.first_name = :first_name AND person.second_name = :second_name AND person.third_name = :third_name AND person.last_name = :last_name',
                 mergedName,
-              ).orWhere('person.phone_number = :phone_number', { phone_number: mergedPhone });
+              ).orWhere('person.phone_number = :phone_number', {
+                phone_number: mergedPhone,
+              });
             }),
           )
           .getOne();
 
         if (duplicatePerson) {
           if (duplicatePerson.phone_number === mergedPhone) {
-            throw new ConflictException('This phone number is already registered.');
+            throw new ConflictException(
+              'This phone number is already registered.',
+            );
           }
-          throw new ConflictException('A person with this exact full name already exists.');
+          throw new ConflictException(
+            'A person with this exact full name already exists.',
+          );
         }
       }
 
@@ -178,7 +214,10 @@ export class ClientsService {
         await queryRunner.manager.save(Person, client.person);
       }
 
-      queryRunner.manager.merge(Client, client, { total_paid_cash, client_status });
+      queryRunner.manager.merge(Client, client, {
+        total_paid_cash,
+        client_status,
+      });
 
       const savedClient = await queryRunner.manager.save(Client, client);
 
@@ -187,7 +226,8 @@ export class ClientsService {
           admin,
           action: ActivityAction.ClientUpdated,
           target_id: savedClient.id,
-          target_label: `${client.person.first_name} ${client.person.last_name}`.trim(),
+          target_label:
+            `${client.person.first_name} ${client.person.last_name}`.trim(),
           metadata: updateClientDTO as Record<string, unknown>,
         },
         queryRunner.manager,
@@ -207,27 +247,30 @@ export class ClientsService {
   async deleteById(
     id: string,
     accountId: string,
-    manager: EntityManager = this.clientsRepository.manager
+    manager: EntityManager = this.clientsRepository.manager,
   ): Promise<Person> {
     const admin = await this.findAdminByAccountId(manager, accountId);
 
     const client = await manager.getRepository(Client).findOne({
       where: { id },
-      relations: { person: true }
-    })
+      relations: { person: true },
+    });
 
     if (!client) {
       throw new NotFoundException(`Client with ID ${id} not found`);
     }
 
-    const removedPerson = await manager.getRepository(Person).remove(client.person);
+    const removedPerson = await manager
+      .getRepository(Person)
+      .remove(client.person);
 
     await this.activityLogsService.log(
       {
         admin,
         action: ActivityAction.ClientDeleted,
         target_id: id,
-        target_label: `${client.person.first_name} ${client.person.last_name}`.trim(),
+        target_label:
+          `${client.person.first_name} ${client.person.last_name}`.trim(),
       },
       manager,
     );
@@ -245,7 +288,7 @@ export class ClientsService {
       .leftJoinAndSelect('client.person', 'person');
 
     if (status) {
-      query.andWhere('client.client_status = :status', { status })
+      query.andWhere('client.client_status = :status', { status });
     }
 
     if (search) {
@@ -260,9 +303,9 @@ export class ClientsService {
             .orWhere('person.nick_name ILIKE :term', { term })
             .orWhere('person.phone_number ILIKE :term', { term })
             .orWhere('person.address ILIKE :term', { term })
-            .orWhere('person.profession ILIKE :term', { term })
+            .orWhere('person.profession ILIKE :term', { term });
         }),
-      )
+      );
     }
 
     return paginate<Client>(query, options);

@@ -1,8 +1,16 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Admin } from "../admins/admin.entity";
-import { PaymentType } from "../installment_plans/enums/paymentType.enum";
-import { InstallmentPlan } from "../installment_plans/installment_plan.entity";
-import { InstallmentMonth } from "../installment_months/installment_month.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Admin } from '../admins/admin.entity';
+import { PaymentType } from '../installment_plans/enums/paymentType.enum';
+import { InstallmentPlan } from '../installment_plans/installment_plan.entity';
+import { InstallmentMonth } from '../installment_months/installment_month.entity';
 
 @Entity('transactions')
 @Index(['admin'])
@@ -22,26 +30,25 @@ export class Transaction {
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @ManyToOne(
-    () => Admin,
-    admin => admin.transactions,
-    { nullable: false, onDelete: 'NO ACTION' }
-  )
+  @ManyToOne(() => Admin, (admin) => admin.transactions, {
+    nullable: false,
+    onDelete: 'NO ACTION',
+  })
   @JoinColumn({ name: 'admin_id' })
   admin: Admin;
 
   @ManyToOne(
     () => InstallmentPlan,
-    installment_plan => installment_plan.transactions,
-    { nullable: true, onDelete: 'SET NULL' }
+    (installment_plan) => installment_plan.transactions,
+    { nullable: true, onDelete: 'SET NULL' },
   )
   @JoinColumn({ name: 'installment_plan_id' })
   installment_plan: InstallmentPlan;
 
   @ManyToOne(
     () => InstallmentMonth,
-    installment_month => installment_month.transactions,
-    { nullable: true, onDelete: 'SET NULL' }
+    (installment_month) => installment_month.transactions,
+    { nullable: true, onDelete: 'SET NULL' },
   )
   @JoinColumn({ name: 'installment_month_id' })
   installment_month: InstallmentMonth;

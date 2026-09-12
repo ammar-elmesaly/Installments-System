@@ -18,10 +18,12 @@ describe('AuthController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api');
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true,
-      transform: true,
-    }));
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+      }),
+    );
     await app.init();
   });
 
@@ -44,10 +46,12 @@ describe('AuthController (e2e)', () => {
       .send(account)
       .expect(201)
       .expect(({ body }) => {
-        expect(body).toEqual(expect.objectContaining({
-          email,
-          role: Role.Client,
-        }));
+        expect(body).toEqual(
+          expect.objectContaining({
+            email,
+            role: Role.Client,
+          }),
+        );
         expect(body.password_hash).toBeUndefined();
       });
 
@@ -80,12 +84,12 @@ describe('AuthController (e2e)', () => {
       .send(account)
       .expect(401)
       .expect(({ body }) => {
-        expect(body).toEqual(expect.objectContaining(
-          {
-            "message": "Unauthorized",
-            "statusCode": 401,
-          }
-        ));
+        expect(body).toEqual(
+          expect.objectContaining({
+            message: 'Unauthorized',
+            statusCode: 401,
+          }),
+        );
       });
   });
 
@@ -96,7 +100,7 @@ describe('AuthController (e2e)', () => {
 
     const superAdmin = {
       email: process.env.SEED_SUPER_ADMIN_EMAIL,
-      password: process.env.SEED_SUPER_ADMIN_PASSWORD
+      password: process.env.SEED_SUPER_ADMIN_PASSWORD,
     };
 
     expect(superAdmin.email).toBeDefined();
@@ -112,7 +116,6 @@ describe('AuthController (e2e)', () => {
       phone_number: uniqueId.slice(-11),
     };
 
-
     let access_token: string;
 
     // login with "seed" super admin account
@@ -120,7 +123,7 @@ describe('AuthController (e2e)', () => {
       .post('/api/auth/login')
       .send({
         email: superAdmin.email,
-        password: superAdmin.password
+        password: superAdmin.password,
       })
       .expect(201)
       .expect(({ body }) => {
@@ -135,13 +138,15 @@ describe('AuthController (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/signup/admin')
       .send(account)
-      .auth(access_token, { type: "bearer" })
+      .auth(access_token, { type: 'bearer' })
       .expect(201)
       .expect(({ body }) => {
-        expect(body).toEqual(expect.objectContaining({
-          email,
-          role: Role.Admin,
-        }));
+        expect(body).toEqual(
+          expect.objectContaining({
+            email,
+            role: Role.Admin,
+          }),
+        );
         expect(body.password_hash).toBeUndefined();
       });
 

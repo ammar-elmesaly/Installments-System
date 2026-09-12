@@ -1,6 +1,14 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Admin } from "../admins/admin.entity";
-import { ActivityAction } from "./enums/activityAction.enum";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Admin } from '../admins/admin.entity';
+import { ActivityAction } from './enums/activityAction.enum';
 
 @Entity('activity_logs')
 @Index(['admin', 'created_at'])
@@ -11,10 +19,7 @@ export class ActivityLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(
-    () => Admin,
-    { nullable: true, onDelete: 'SET NULL' }
-  )
+  @ManyToOne(() => Admin, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'admin_id' })
   admin?: Admin;
 

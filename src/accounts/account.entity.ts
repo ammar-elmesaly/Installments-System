@@ -1,7 +1,14 @@
-import { Column, Entity, Index, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Person } from "../people/person.entity";
-import { Role } from "./enums/role";
-import { Exclude } from "class-transformer";
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Person } from '../people/person.entity';
+import { Role } from './enums/role';
+import { Exclude } from 'class-transformer';
 
 @Entity('accounts')
 @Index(['person'])
@@ -22,11 +29,10 @@ export class Account {
   @Column({ type: 'enum', enum: Role })
   role: Role;
 
-  @OneToOne(
-    () => Person,
-    person => person.account,
-    { nullable: false, onDelete: 'CASCADE' }
-  )
+  @OneToOne(() => Person, (person) => person.account, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'person_id' })
   person: Person;
 }

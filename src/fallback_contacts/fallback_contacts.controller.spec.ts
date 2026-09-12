@@ -9,10 +9,12 @@ describe('FallbackContactsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [FallbackContactsController],
-      providers: [{ provide: FallbackContactsService, useValue: service }]
+      providers: [{ provide: FallbackContactsService, useValue: service }],
     }).compile();
 
-    controller = module.get<FallbackContactsController>(FallbackContactsController);
+    controller = module.get<FallbackContactsController>(
+      FallbackContactsController,
+    );
   });
 
   it('should be defined', () => {

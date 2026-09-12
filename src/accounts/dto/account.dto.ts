@@ -1,10 +1,18 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsUUID, Matches } from "class-validator";
-import { Role } from "../enums/role";
-import { PartialType } from "@nestjs/mapped-types";
-import { CreateAdminDTO } from "../../admins/dto/admin.dto";
-import { CreateClientDTO } from "../../clients/dto/client.dto";
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsUUID,
+  Matches,
+} from 'class-validator';
+import { Role } from '../enums/role';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateAdminDTO } from '../../admins/dto/admin.dto';
+import { CreateClientDTO } from '../../clients/dto/client.dto';
 
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&#_\.\-]{8,}$/;
+const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&#_\.\-]{8,}$/;
 
 class CreateAccountDTO {
   @IsNotEmpty()
@@ -12,7 +20,10 @@ class CreateAccountDTO {
   readonly email: string;
 
   @IsNotEmpty()
-  @Matches(PASSWORD_REGEX, { message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.' } )
+  @Matches(PASSWORD_REGEX, {
+    message:
+      'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.',
+  })
   readonly password: string;
 
   @IsNotEmpty()
@@ -26,7 +37,10 @@ export class CreateClientAccountDTO extends CreateClientDTO {
   readonly email: string;
 
   @IsNotEmpty()
-  @Matches(PASSWORD_REGEX, { message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.' } )
+  @Matches(PASSWORD_REGEX, {
+    message:
+      'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.',
+  })
   readonly password: string;
 
   @IsOptional()
@@ -40,10 +54,11 @@ export class CreateAdminAccountDTO extends CreateAdminDTO {
   readonly email: string;
 
   @IsNotEmpty()
-  @Matches(PASSWORD_REGEX, { message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.' } )
+  @Matches(PASSWORD_REGEX, {
+    message:
+      'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.',
+  })
   readonly password: string;
 }
-
-
 
 export class UpdateAccountDTO extends PartialType(CreateAccountDTO) {}

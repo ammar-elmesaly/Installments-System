@@ -20,7 +20,9 @@ function requireSeedValue(key: string): string {
   const value = process.env[key]?.trim();
 
   if (!value) {
-    throw new Error(`[seed-super-admin] Missing required environment variable: ${key}`);
+    throw new Error(
+      `[seed-super-admin] Missing required environment variable: ${key}`,
+    );
   }
 
   return value;

@@ -70,8 +70,13 @@ describe('AuthService', () => {
     compareMock.mockResolvedValue(true);
     jwtService.sign.mockReturnValue('signed-token');
 
-    await expect(service.login(login)).resolves.toEqual({ access_token: 'signed-token' });
-    expect(accountsService.updateTokenVersion).toHaveBeenCalledWith('account-id', 3);
+    await expect(service.login(login)).resolves.toEqual({
+      access_token: 'signed-token',
+    });
+    expect(accountsService.updateTokenVersion).toHaveBeenCalledWith(
+      'account-id',
+      3,
+    );
     expect(jwtService.sign).toHaveBeenCalledWith({
       token_version: 3,
       email: login.email,
@@ -104,14 +109,20 @@ describe('AuthService', () => {
     compareMock.mockResolvedValue(true);
     jwtService.sign.mockReturnValue('admin-token');
 
-    await expect(service.login(login)).resolves.toEqual({ access_token: 'admin-token' });
-    expect(accountsService.getAdminByAccountId).toHaveBeenCalledWith('admin-account-id');
-    expect(jwtService.sign).toHaveBeenCalledWith(expect.objectContaining({
-      role: Role.Admin,
-      name: 'Admin Test Middle User',
-      admin_level: AdminLevel.SuperAdmin,
-      token_version: 1,
-    }));
+    await expect(service.login(login)).resolves.toEqual({
+      access_token: 'admin-token',
+    });
+    expect(accountsService.getAdminByAccountId).toHaveBeenCalledWith(
+      'admin-account-id',
+    );
+    expect(jwtService.sign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: Role.Admin,
+        name: 'Admin Test Middle User',
+        admin_level: AdminLevel.SuperAdmin,
+        token_version: 1,
+      }),
+    );
   });
 
   it('rejects invalid passwords without updating the token version', async () => {
@@ -124,7 +135,9 @@ describe('AuthService', () => {
     } as any);
     compareMock.mockResolvedValue(false);
 
-    await expect(service.login(login)).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(service.login(login)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
     expect(accountsService.updateTokenVersion).not.toHaveBeenCalled();
     expect(jwtService.sign).not.toHaveBeenCalled();
   });
@@ -133,7 +146,9 @@ describe('AuthService', () => {
     const login = { email: 'missing@example.com', password: 'Password123' };
     accountsService.findByEmail.mockRejectedValue(new UnauthorizedException());
 
-    await expect(service.login(login)).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(service.login(login)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
     expect(compareMock).not.toHaveBeenCalled();
   });
 });

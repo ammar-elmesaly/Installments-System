@@ -5,11 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { InstallmentMonth } from './installment_month.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([InstallmentMonth])
-  ],
+  imports: [TypeOrmModule.forFeature([InstallmentMonth])],
   controllers: [InstallmentMonthsController],
   providers: [InstallmentMonthsService],
-  exports: [InstallmentMonthsService]
+  exports: [InstallmentMonthsService],
 })
 export class InstallmentMonthsModule {}

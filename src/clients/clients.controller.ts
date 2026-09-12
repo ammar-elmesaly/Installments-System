@@ -1,9 +1,21 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { ClientsService } from './clients.service';
 import { CreateClientDTO, UpdateClientDTO } from './dto/client.dto';
 import { FindClientsDto } from './dto/find-clients.dto';
 import { MinAdminLevel } from '../auth/admin-level.decorator';
 import { AdminLevel } from '../admins/enums/adminLevel.enum';
+import { CurrentUser } from '../common/decorators/current-user-decorator';
 
 @Controller('clients')
 export class ClientsController {
@@ -14,8 +26,8 @@ export class ClientsController {
     return this.clientsService.paginate(
       { page: query.page, limit: query.limit },
       query.status,
-      query.search
-    )
+      query.search,
+    );
   }
 
   @Get(':id')
@@ -25,19 +37,29 @@ export class ClientsController {
 
   @Post('new')
   @MinAdminLevel(AdminLevel.Collector)
-  create(@Body() createClientDTO: CreateClientDTO, @Req() req) {
-    return this.clientsService.create(createClientDTO, req.user.id);
+  create(
+    @Body() createClientDTO: CreateClientDTO,
+    @CurrentUser('id') currentUserId: string,
+  ) {
+    return this.clientsService.create(createClientDTO, currentUserId);
   }
 
   @Put('update/:id')
   @MinAdminLevel(AdminLevel.Collector)
-  updateById(@Param('id', ParseUUIDPipe) id: string, @Body() updateClientDTO: UpdateClientDTO, @Req() req) {
-    return this.clientsService.updateById(id, updateClientDTO, req.user.id);
+  updateById(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateClientDTO: UpdateClientDTO,
+    @CurrentUser('id') currentUserId: string,
+  ) {
+    return this.clientsService.updateById(id, updateClientDTO, currentUserId);
   }
 
   @Delete('remove/:id')
   @MinAdminLevel(AdminLevel.Collector)
-  removeById(@Param('id', ParseUUIDPipe) id: string, @Req() req) {
-    return this.clientsService.deleteById(id, req.user.id);
+  removeById(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('id') currentUserId: string,
+  ) {
+    return this.clientsService.deleteById(id, currentUserId);
   }
 }

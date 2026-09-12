@@ -5,11 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { InstallmentPlan } from './installment_plan.entity';
 import { ActivityLogsModule } from '../activity_logs/activity_logs.module';
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([InstallmentPlan]),
-    ActivityLogsModule
-  ],
+  imports: [TypeOrmModule.forFeature([InstallmentPlan]), ActivityLogsModule],
   controllers: [InstallmentPlansController],
-  providers: [InstallmentPlansService]
+  providers: [InstallmentPlansService],
 })
 export class InstallmentPlansModule {}

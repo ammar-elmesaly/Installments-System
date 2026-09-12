@@ -40,9 +40,11 @@ describe('ActivityLogsService', () => {
     repository.create.mockReturnValue(entry);
     repository.save.mockResolvedValue(entry);
 
-    await expect(service.log({
-      action: ActivityAction.Create,
-    })).resolves.toBeUndefined();
+    await expect(
+      service.log({
+        action: ActivityAction.Create,
+      }),
+    ).resolves.toBeUndefined();
 
     expect(repository.create).toHaveBeenCalledWith({
       admin: undefined,
@@ -65,13 +67,16 @@ describe('ActivityLogsService', () => {
     const admin = { id: 'admin-id' } as any;
     const metadata = { amount: 100 };
 
-    await service.log({
-      admin,
-      action: ActivityAction.Update,
-      target_id: 'target-id',
-      target_label: 'Target',
-      metadata,
-    }, manager as any);
+    await service.log(
+      {
+        admin,
+        action: ActivityAction.Update,
+        target_id: 'target-id',
+        target_label: 'Target',
+        metadata,
+      },
+      manager as any,
+    );
 
     expect(manager.getRepository).toHaveBeenCalledWith(ActivityLog);
     expect(managerRepository.create).toHaveBeenCalledWith({
@@ -89,7 +94,9 @@ describe('ActivityLogsService', () => {
     repository.create.mockReturnValue({ id: 'log-id' });
     repository.save.mockRejectedValue(error);
 
-    await expect(service.log({ action: ActivityAction.Delete })).rejects.toBe(error);
+    await expect(service.log({ action: ActivityAction.Delete })).rejects.toBe(
+      error,
+    );
   });
 
   it('paginates logs with admin relations and newest-first ordering', async () => {

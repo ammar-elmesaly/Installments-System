@@ -1,4 +1,11 @@
-import { IsUUID, IsDateString, IsNumber, IsPositive, IsEnum, IsOptional } from 'class-validator';
+import {
+  IsUUID,
+  IsDateString,
+  IsNumber,
+  IsPositive,
+  IsEnum,
+  IsOptional,
+} from 'class-validator';
 import { InstallmentMonthStatus } from '../enums/installmentMonthStatus.enum';
 
 export class CreateInstallmentMonthDTO {

@@ -5,9 +5,7 @@ import { CronGuard } from './auth/cron.guard';
 
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-  ) { }
+  constructor(private readonly appService: AppService) {}
 
   @Post('cron-job')
   @Public()

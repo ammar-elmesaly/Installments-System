@@ -9,7 +9,9 @@ describe('InstallmentMonthsController', () => {
       controllers: [InstallmentMonthsController],
     }).compile();
 
-    controller = module.get<InstallmentMonthsController>(InstallmentMonthsController);
+    controller = module.get<InstallmentMonthsController>(
+      InstallmentMonthsController,
+    );
   });
 
   it('should be defined', () => {

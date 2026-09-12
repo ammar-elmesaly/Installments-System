@@ -24,7 +24,9 @@ describe('InstallmentPlansController', () => {
       providers: [{ provide: InstallmentPlansService, useValue: service }],
     }).compile();
 
-    controller = module.get<InstallmentPlansController>(InstallmentPlansController);
+    controller = module.get<InstallmentPlansController>(
+      InstallmentPlansController,
+    );
   });
 
   it('should be defined', () => {
@@ -32,19 +34,28 @@ describe('InstallmentPlansController', () => {
   });
 
   it('delegates findAll with pagination and search params', () => {
-    const query = { page: 2, limit: 20, status: InstallmentPlanStatus.Active, search: 'client' };
+    const query = {
+      page: 2,
+      limit: 20,
+      status: InstallmentPlanStatus.Active,
+      search: 'client',
+    };
 
     controller.findAll(query as any);
 
     expect(service.paginate).toHaveBeenCalledWith(
       { page: 2, limit: 20 },
       InstallmentPlanStatus.Active,
-      'client'
+      'client',
     );
   });
 
   it('delegates plan creation with account id from request', () => {
-    const planDTO = { client_id: 'client-id', down_payment: 1000, duration_months: 12 } as any;
+    const planDTO = {
+      client_id: 'client-id',
+      down_payment: 1000,
+      duration_months: 12,
+    } as any;
     const req = { user: { id: 'account-id' } };
 
     controller.create(planDTO, req);
@@ -53,7 +64,11 @@ describe('InstallmentPlansController', () => {
   });
 
   it('delegates payment recording', () => {
-    const paymentDTO = { installment_plan_id: 'plan-id', paid_amount: 500, payment_type: PaymentType.Cash };
+    const paymentDTO = {
+      installment_plan_id: 'plan-id',
+      paid_amount: 500,
+      payment_type: PaymentType.Cash,
+    };
     const req = { user: { id: 'account-id' } };
 
     controller.pay(paymentDTO, req);
@@ -88,6 +103,10 @@ describe('InstallmentPlansController', () => {
 
     controller.updateNotes(planId, dto, req);
 
-    expect(service.updateNotes).toHaveBeenCalledWith(planId, 'updated notes', 'account-id');
+    expect(service.updateNotes).toHaveBeenCalledWith(
+      planId,
+      'updated notes',
+      'account-id',
+    );
   });
 });

@@ -10,7 +10,10 @@ export class TransactionsService {
     private transactionsRepository: Repository<Transaction>,
   ) {}
 
-  async findByPlan(installmentPlanId: string, limit = 10): Promise<Transaction[]> {
+  async findByPlan(
+    installmentPlanId: string,
+    limit = 10,
+  ): Promise<Transaction[]> {
     return this.transactionsRepository.find({
       where: { installment_plan: { id: installmentPlanId } },
       relations: {

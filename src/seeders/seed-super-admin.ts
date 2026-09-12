@@ -20,7 +20,7 @@ async function bootstrap() {
   }
 }
 
-bootstrap().catch(error => {
+bootstrap().catch((error) => {
   console.error('[seed-super-admin] Seeding failed');
   console.error(error);
   process.exitCode = 1;

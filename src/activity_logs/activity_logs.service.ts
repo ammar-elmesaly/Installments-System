@@ -4,7 +4,11 @@ import { Repository, EntityManager } from 'typeorm';
 import { ActivityLog } from './activity_logs.entity';
 import { ActivityAction } from './enums/activityAction.enum';
 import { Admin } from '../admins/admin.entity';
-import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
+import {
+  IPaginationOptions,
+  Pagination,
+  paginate,
+} from 'nestjs-typeorm-paginate';
 
 interface LogParams {
   admin?: Admin;
@@ -25,7 +29,9 @@ export class ActivityLogsService {
   // existing queryRunner transaction (e.g. inside pay()/create() which
   // already use their own transaction) instead of opening a second one.
   async log(params: LogParams, manager?: EntityManager): Promise<void> {
-    const repo = manager ? manager.getRepository(ActivityLog) : this.activityLogRepository;
+    const repo = manager
+      ? manager.getRepository(ActivityLog)
+      : this.activityLogRepository;
     const entry = repo.create({
       admin: params.admin,
       action: params.action,

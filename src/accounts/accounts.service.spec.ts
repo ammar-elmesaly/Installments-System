@@ -12,7 +12,11 @@ jest.mock('bcrypt');
 
 describe('AccountsService', () => {
   let service: AccountsService;
-  let repository: { update: jest.Mock; findOneBy: jest.Mock; findOne: jest.Mock };
+  let repository: {
+    update: jest.Mock;
+    findOneBy: jest.Mock;
+    findOne: jest.Mock;
+  };
   let dataSource: { createQueryRunner: jest.Mock };
   let compareMock: jest.Mock;
 
@@ -49,7 +53,7 @@ describe('AccountsService', () => {
 
     expect(repository.update).toHaveBeenCalledWith(
       { id: 'account-id' },
-      { token_version: 2 }
+      { token_version: 2 },
     );
   });
 
@@ -60,7 +64,12 @@ describe('AccountsService', () => {
     queryRunner.manager.findOneBy.mockResolvedValueOnce(null);
     queryRunner.manager.findOne.mockResolvedValueOnce(null);
 
-    const person = { id: 'person-id', first_name: 'John', last_name: 'Doe', phone_number: '01234567890' };
+    const person = {
+      id: 'person-id',
+      first_name: 'John',
+      last_name: 'Doe',
+      phone_number: '01234567890',
+    };
     const admin = { id: 'admin-id', person, admin_level: AdminLevel.Auditor };
     const account = {
       id: 'account-id',
@@ -69,8 +78,18 @@ describe('AccountsService', () => {
       person,
     };
 
-    queryRunner.manager.create.mockReturnValueOnce(person).mockReturnValueOnce(admin).mockReturnValueOnce(account);
-    queryRunner.manager.save.mockResolvedValueOnce(person).mockResolvedValueOnce(admin).mockResolvedValueOnce({ ...account, password_hash: 'hashed-password', token_version: 0 });
+    queryRunner.manager.create
+      .mockReturnValueOnce(person)
+      .mockReturnValueOnce(admin)
+      .mockReturnValueOnce(account);
+    queryRunner.manager.save
+      .mockResolvedValueOnce(person)
+      .mockResolvedValueOnce(admin)
+      .mockResolvedValueOnce({
+        ...account,
+        password_hash: 'hashed-password',
+        token_version: 0,
+      });
     dataSource.createQueryRunner.mockReturnValue(queryRunner);
 
     const dto = {
@@ -97,7 +116,9 @@ describe('AccountsService', () => {
 
   it('rejects duplicate email on admin account creation', async () => {
     const queryRunner = createQueryRunner();
-    queryRunner.manager.findOneBy.mockResolvedValueOnce({ id: 'duplicate-account-id' });
+    queryRunner.manager.findOneBy.mockResolvedValueOnce({
+      id: 'duplicate-account-id',
+    });
     dataSource.createQueryRunner.mockReturnValue(queryRunner);
 
     const dto = {
@@ -110,7 +131,9 @@ describe('AccountsService', () => {
       password: 'password123',
     };
 
-    await expect(service.createAdmin(dto)).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.createAdmin(dto)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
     expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
     expect(queryRunner.release).toHaveBeenCalled();
   });
@@ -134,7 +157,9 @@ describe('AccountsService', () => {
       password: 'password123',
     };
 
-    await expect(service.createAdmin(dto)).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.createAdmin(dto)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
     expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
   });
 
@@ -160,7 +185,9 @@ describe('AccountsService', () => {
       password: 'password123',
     };
 
-    await expect(service.createAdmin(dto)).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.createAdmin(dto)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
     expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
   });
 
@@ -171,8 +198,18 @@ describe('AccountsService', () => {
     queryRunner.manager.findOneBy.mockResolvedValueOnce(null);
     queryRunner.manager.findOne.mockResolvedValueOnce(null);
 
-    const person = { id: 'person-id', first_name: 'Jane', last_name: 'Smith', phone_number: '01234567890' };
-    const client = { id: 'client-id', person, total_paid_cash: 0, client_status: ClientStatus.Active };
+    const person = {
+      id: 'person-id',
+      first_name: 'Jane',
+      last_name: 'Smith',
+      phone_number: '01234567890',
+    };
+    const client = {
+      id: 'client-id',
+      person,
+      total_paid_cash: 0,
+      client_status: ClientStatus.Active,
+    };
     const account = {
       id: 'account-id',
       email: 'jane@example.com',
@@ -180,8 +217,14 @@ describe('AccountsService', () => {
       person,
     };
 
-    queryRunner.manager.create.mockReturnValueOnce(person).mockReturnValueOnce(client).mockReturnValueOnce(account);
-    queryRunner.manager.save.mockResolvedValueOnce(person).mockResolvedValueOnce(client).mockResolvedValueOnce({ ...account, password_hash: 'hashed-password' });
+    queryRunner.manager.create
+      .mockReturnValueOnce(person)
+      .mockReturnValueOnce(client)
+      .mockReturnValueOnce(account);
+    queryRunner.manager.save
+      .mockResolvedValueOnce(person)
+      .mockResolvedValueOnce(client)
+      .mockResolvedValueOnce({ ...account, password_hash: 'hashed-password' });
     dataSource.createQueryRunner.mockReturnValue(queryRunner);
 
     const dto = {
@@ -208,7 +251,9 @@ describe('AccountsService', () => {
 
   it('rejects duplicate email on client account creation', async () => {
     const queryRunner = createQueryRunner();
-    queryRunner.manager.findOneBy.mockResolvedValueOnce({ id: 'duplicate-account-id' });
+    queryRunner.manager.findOneBy.mockResolvedValueOnce({
+      id: 'duplicate-account-id',
+    });
     dataSource.createQueryRunner.mockReturnValue(queryRunner);
 
     const dto = {
@@ -221,7 +266,9 @@ describe('AccountsService', () => {
       password: 'password123',
     };
 
-    await expect(service.createClient(dto)).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.createClient(dto)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
     expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
   });
 
@@ -244,25 +291,35 @@ describe('AccountsService', () => {
       password: 'password123',
     };
 
-    await expect(service.createClient(dto)).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.createClient(dto)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
     expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
   });
 
   it('finds account by id and throws when not found', async () => {
     const account = { id: 'account-id', email: 'test@example.com' };
-    repository.findOneBy.mockResolvedValueOnce(account).mockResolvedValueOnce(null);
+    repository.findOneBy
+      .mockResolvedValueOnce(account)
+      .mockResolvedValueOnce(null);
 
     await expect(service.findById('account-id')).resolves.toEqual(account);
-    await expect(service.findById('missing-id')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.findById('missing-id')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('finds account by email and throws when not found', async () => {
     const account = { id: 'account-id', email: 'test@example.com' };
     const loginDTO = { email: 'test@example.com', password: 'password123' };
-    repository.findOneBy.mockResolvedValueOnce(account).mockResolvedValueOnce(null);
+    repository.findOneBy
+      .mockResolvedValueOnce(account)
+      .mockResolvedValueOnce(null);
 
     await expect(service.findByEmail(loginDTO)).resolves.toEqual(account);
-    await expect(service.findByEmail(loginDTO)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.findByEmail(loginDTO)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('finds account by email with custom exception', async () => {
@@ -270,7 +327,9 @@ describe('AccountsService', () => {
     const loginDTO = { email: 'test@example.com', password: 'password123' };
     repository.findOneBy.mockResolvedValueOnce(null);
 
-    await expect(service.findByEmail(loginDTO, customException)).rejects.toBe(customException);
+    await expect(service.findByEmail(loginDTO, customException)).rejects.toBe(
+      customException,
+    );
   });
 
   it('finds admin by account id with relations', async () => {
@@ -301,7 +360,9 @@ describe('AccountsService', () => {
     };
     repository.findOne.mockResolvedValue(account);
 
-    await expect(service.getAdminByAccountId('account-id')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.getAdminByAccountId('account-id'),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });
 

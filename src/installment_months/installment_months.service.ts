@@ -6,15 +6,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class InstallmentMonthsService {
-  constructor (
+  constructor(
     @InjectRepository(InstallmentMonth)
     private installmentMonthsRepository: Repository<InstallmentMonth>,
-    private dataSource: DataSource
+    private dataSource: DataSource,
   ) {}
 
   async create(
     createInstallmentMonthDTO: CreateInstallmentMonthDTO,
-    queryRunner: QueryRunner = this.dataSource.createQueryRunner()
+    queryRunner: QueryRunner = this.dataSource.createQueryRunner(),
   ) {
     const isLocalRunner = !queryRunner.isTransactionActive;
 
@@ -30,14 +30,14 @@ export class InstallmentMonthsService {
         installment_plan: { id: createInstallmentMonthDTO.installment_plan_id },
       });
 
-      const savedInstallmentMonth = await queryRunner.manager.save(installmentMonth);
+      const savedInstallmentMonth =
+        await queryRunner.manager.save(installmentMonth);
 
       if (isLocalRunner) {
         await queryRunner.commitTransaction();
       }
 
       return savedInstallmentMonth;
-
     } catch (error) {
       if (isLocalRunner) {
         await queryRunner.rollbackTransaction();

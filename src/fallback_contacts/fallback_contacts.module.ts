@@ -7,6 +7,6 @@ import { FallbackContact } from './fallback_contact.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([FallbackContact])],
   controllers: [FallbackContactsController],
-  providers: [FallbackContactsService]
+  providers: [FallbackContactsService],
 })
 export class FallbackContactsModule {}

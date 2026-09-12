@@ -1,5 +1,5 @@
-import { IsOptional, IsString, Length, MaxLength } from "class-validator";
-import { PartialType } from "@nestjs/mapped-types";
+import { IsOptional, IsString, Length, MaxLength } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CreatePersonDTO {
   @IsString()
@@ -24,7 +24,9 @@ export class CreatePersonDTO {
   readonly nick_name?: string;
 
   @IsString()
-  @Length(11, 11, { message: "phone_number must be exactly 11 characters long" })
+  @Length(11, 11, {
+    message: 'phone_number must be exactly 11 characters long',
+  })
   readonly phone_number: string;
 
   @IsString()

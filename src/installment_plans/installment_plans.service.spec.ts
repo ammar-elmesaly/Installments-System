@@ -10,7 +10,13 @@ import { PaymentType } from './enums/paymentType.enum';
 
 describe('InstallmentPlansService', () => {
   let service: InstallmentPlansService;
-  let repository: { findOne: jest.Mock; find: jest.Mock; createQueryBuilder: jest.Mock; manager: any; save: jest.Mock };
+  let repository: {
+    findOne: jest.Mock;
+    find: jest.Mock;
+    createQueryBuilder: jest.Mock;
+    manager: any;
+    save: jest.Mock;
+  };
   let dataSource: { createQueryRunner: jest.Mock };
   let activityLogsService: jest.Mocked<ActivityLogsService>;
 
@@ -61,7 +67,11 @@ describe('InstallmentPlansService', () => {
     };
     repository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
-    await service.paginate({ page: 1, limit: 10 }, InstallmentPlanStatus.Active, 'search');
+    await service.paginate(
+      { page: 1, limit: 10 },
+      InstallmentPlanStatus.Active,
+      'search',
+    );
 
     expect(repository.createQueryBuilder).toHaveBeenCalled();
     expect(mockQueryBuilder.getCount).toHaveBeenCalled();
@@ -73,16 +83,22 @@ describe('InstallmentPlansService', () => {
       id: 'plan-id',
       status: InstallmentPlanStatus.Paid,
     } as any);
-    repository.manager.findOne.mockResolvedValue({ person: { admin: {} } } as any);
+    repository.manager.findOne.mockResolvedValue({
+      person: { admin: {} },
+    } as any);
 
-    await expect(service.freeze('plan-id', 'account-id')).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service.freeze('plan-id', 'account-id'),
+    ).rejects.toBeInstanceOf(BadRequestException);
 
     repository.findOne.mockResolvedValueOnce({
       id: 'plan-id',
       status: InstallmentPlanStatus.Frozen,
     } as any);
 
-    await expect(service.freeze('plan-id', 'account-id')).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service.freeze('plan-id', 'account-id'),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('freezes an active plan and logs the action', async () => {
@@ -91,9 +107,14 @@ describe('InstallmentPlansService', () => {
       status: InstallmentPlanStatus.Active,
       client: { person: { first_name: 'John', last_name: 'Doe' } },
     } as any;
-    repository.manager.findOne.mockResolvedValue({ person: { admin: {} } } as any);
+    repository.manager.findOne.mockResolvedValue({
+      person: { admin: {} },
+    } as any);
     repository.findOne.mockResolvedValueOnce(plan);
-    repository.save.mockResolvedValue({ ...plan, status: InstallmentPlanStatus.Frozen });
+    repository.save.mockResolvedValue({
+      ...plan,
+      status: InstallmentPlanStatus.Frozen,
+    });
 
     const result = await service.freeze('plan-id', 'account-id');
 
@@ -108,9 +129,14 @@ describe('InstallmentPlansService', () => {
       status: InstallmentPlanStatus.Frozen,
       client: { person: { first_name: 'Jane', last_name: 'Smith' } },
     } as any;
-    repository.manager.findOne.mockResolvedValue({ person: { admin: {} } } as any);
+    repository.manager.findOne.mockResolvedValue({
+      person: { admin: {} },
+    } as any);
     repository.findOne.mockResolvedValueOnce(plan);
-    repository.save.mockResolvedValue({ ...plan, status: InstallmentPlanStatus.Active });
+    repository.save.mockResolvedValue({
+      ...plan,
+      status: InstallmentPlanStatus.Active,
+    });
 
     const result = await service.unfreeze('plan-id', 'account-id');
 
@@ -122,14 +148,20 @@ describe('InstallmentPlansService', () => {
   it('throws when admin is not found during freeze', async () => {
     repository.manager.findOne.mockResolvedValue(null);
 
-    await expect(service.freeze('plan-id', 'account-id')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.freeze('plan-id', 'account-id'),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('throws when plan is not found during freeze', async () => {
-    repository.manager.findOne.mockResolvedValue({ person: { admin: {} } } as any);
+    repository.manager.findOne.mockResolvedValue({
+      person: { admin: {} },
+    } as any);
     repository.findOne.mockResolvedValue(null);
 
-    await expect(service.freeze('plan-id', 'account-id')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.freeze('plan-id', 'account-id'),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('updates plan notes and logs the action', async () => {
@@ -138,11 +170,17 @@ describe('InstallmentPlansService', () => {
       notes: 'old notes',
       client: { person: { first_name: 'Alice', last_name: 'Brown' } },
     } as any;
-    repository.manager.findOne.mockResolvedValue({ person: { admin: {} } } as any);
+    repository.manager.findOne.mockResolvedValue({
+      person: { admin: {} },
+    } as any);
     repository.findOne.mockResolvedValue(plan);
     repository.save.mockResolvedValue({ ...plan, notes: 'new notes' });
 
-    const result = await service.updateNotes('plan-id', 'new notes', 'account-id');
+    const result = await service.updateNotes(
+      'plan-id',
+      'new notes',
+      'account-id',
+    );
 
     expect(result.notes).toBe('new notes');
     expect(repository.save).toHaveBeenCalled();

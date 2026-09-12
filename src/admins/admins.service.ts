@@ -1,10 +1,20 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Admin } from './admin.entity';
 import { CreateAdminDTO, UpdateAdminDTO } from './dto/admin.dto';
 import { DataSource, EntityManager, QueryRunner, Repository } from 'typeorm';
 import { Person } from '../people/person.entity';
-import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import {
+  IPaginationOptions,
+  paginate,
+  Pagination,
+} from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class AdminsService {
@@ -19,7 +29,10 @@ export class AdminsService {
   }
 
   async findById(id: string): Promise<Admin> {
-    const admin = await this.adminsRepository.findOne({ where: { id }, relations: { person: true } });
+    const admin = await this.adminsRepository.findOne({
+      where: { id },
+      relations: { person: true },
+    });
     if (!admin) {
       throw new NotFoundException(`Admin with ID ${id} not found`);
     }
@@ -28,7 +41,7 @@ export class AdminsService {
 
   async create(
     createAdminDTO: CreateAdminDTO,
-    queryRunner: QueryRunner = this.dataSource.createQueryRunner()
+    queryRunner: QueryRunner = this.dataSource.createQueryRunner(),
   ): Promise<Admin> {
     const isLocalRunner = !queryRunner.isTransactionActive;
 
@@ -36,7 +49,7 @@ export class AdminsService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
     }
-    
+
     try {
       const duplicatePerson = await queryRunner.manager.findOne(Person, {
         where: [
@@ -52,10 +65,14 @@ export class AdminsService {
 
       if (duplicatePerson) {
         if (duplicatePerson.phone_number === createAdminDTO.phone_number) {
-          throw new ConflictException('This phone number is already registered.');
+          throw new ConflictException(
+            'This phone number is already registered.',
+          );
         }
 
-        throw new ConflictException('A person with this exact full name already exists.');
+        throw new ConflictException(
+          'A person with this exact full name already exists.',
+        );
       }
 
       const person = queryRunner.manager.create(Person, createAdminDTO);
@@ -68,7 +85,6 @@ export class AdminsService {
         await queryRunner.commitTransaction();
       }
       return savedAdmin;
-
     } catch (error) {
       if (isLocalRunner) {
         await queryRunner.rollbackTransaction();
@@ -83,6 +99,7 @@ export class AdminsService {
 
   async updateById(
     id: string,
+    accountId: string,
     updateAdminDTO: UpdateAdminDTO,
   ): Promise<Admin> {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -92,7 +109,7 @@ export class AdminsService {
     try {
       const admin = await queryRunner.manager.findOne(Admin, {
         where: { id },
-        relations: { person: true },
+        relations: { person: { account: true } },
       });
 
       if (!admin) {
@@ -106,38 +123,54 @@ export class AdminsService {
         await queryRunner.manager.save(Person, admin.person);
       }
 
+      // if the admin level changes AND it's the currently logged in account
+      if (
+        admin.admin_level !== admin_level &&
+        accountId === admin.person.account.id
+      ) {
+        throw new ForbiddenException(
+          'Cannot change current logged-in admin level',
+        );
+      }
+
       queryRunner.manager.merge(Admin, admin, { admin_level });
 
       const savedAdmin = await queryRunner.manager.save(Admin, admin);
       await queryRunner.commitTransaction();
 
       return savedAdmin;
-
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
       await queryRunner.release();
     }
-  } 
+  }
 
   async deleteById(
-    id: string, 
-    manager: EntityManager = this.adminsRepository.manager
+    id: string,
+    accountId: string,
+    manager: EntityManager = this.adminsRepository.manager,
   ): Promise<Person> {
     const admin = await manager.getRepository(Admin).findOne({
       where: { id },
-      relations: { person: true }
-    })
+      relations: { person: { account: true } },
+    });
 
     if (!admin) {
       throw new NotFoundException(`Admin with ID ${id} not found`);
+    }
+
+    if (accountId === admin.person.account.id) {
+      throw new ForbiddenException('Cannot delete current logged-in admin');
     }
 
     return manager.getRepository(Person).remove(admin.person);
   }
 
   paginate(options: IPaginationOptions): Promise<Pagination<Admin>> {
-    return paginate<Admin>(this.adminsRepository, options, { relations: { person: true } });
+    return paginate<Admin>(this.adminsRepository, options, {
+      relations: { person: true },
+    });
   }
 }

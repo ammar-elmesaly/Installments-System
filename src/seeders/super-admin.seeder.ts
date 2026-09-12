@@ -56,21 +56,31 @@ export class SuperAdminSeeder {
 
       const savedPerson = await personRepository.save(person);
 
-      const admin = existingAccount?.person?.admin ?? existingPerson?.admin ?? adminRepository.create();
+      const admin =
+        existingAccount?.person?.admin ??
+        existingPerson?.admin ??
+        adminRepository.create();
       admin.person = savedPerson;
       admin.admin_level = AdminLevel.SuperAdmin;
       await adminRepository.save(admin);
 
-      const account = existingAccount ?? existingPerson?.account ?? accountRepository.create();
+      const account =
+        existingAccount ??
+        existingPerson?.account ??
+        accountRepository.create();
       account.person = savedPerson;
       account.email = this.config.email;
       account.role = Role.Admin;
-      account.password_hash = await this.resolvePasswordHash(existingAccount ?? existingPerson?.account);
+      account.password_hash = await this.resolvePasswordHash(
+        existingAccount ?? existingPerson?.account,
+      );
 
       await accountRepository.save(account);
 
       await queryRunner.commitTransaction();
-      console.log(`[seed-super-admin] Super Admin ready for ${this.config.email}`);
+      console.log(
+        `[seed-super-admin] Super Admin ready for ${this.config.email}`,
+      );
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -79,12 +89,17 @@ export class SuperAdminSeeder {
     }
   }
 
-  private async resolvePasswordHash(existingAccount?: Account): Promise<string> {
+  private async resolvePasswordHash(
+    existingAccount?: Account,
+  ): Promise<string> {
     if (!existingAccount?.password_hash) {
       return bcrypt.hash(this.config.password, 12);
     }
 
-    const passwordMatches = await bcrypt.compare(this.config.password, existingAccount.password_hash);
+    const passwordMatches = await bcrypt.compare(
+      this.config.password,
+      existingAccount.password_hash,
+    );
 
     if (passwordMatches) {
       return existingAccount.password_hash;

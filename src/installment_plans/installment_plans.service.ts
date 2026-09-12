@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Brackets, DataSource, Repository } from 'typeorm';
 import { InstallmentPlan } from './installment_plan.entity';
 import { CreateInstallmentPlanDTO } from './dto/createInstallmentPlan.dto';
@@ -13,13 +17,17 @@ import dayjs from 'dayjs';
 import Big from 'big.js';
 import { Account } from '../accounts/account.entity';
 import { InstallmentPlanStatus } from './enums/installmentPlanStatus.enum';
-import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
+import {
+  IPaginationOptions,
+  Pagination,
+  paginate,
+} from 'nestjs-typeorm-paginate';
 import { PaymentType } from './enums/paymentType.enum';
 import { ActivityLogsService } from '../activity_logs/activity_logs.service';
 import { ActivityAction } from '../activity_logs/enums/activityAction.enum';
 @Injectable()
-export class InstallmentPlansService {  
-  constructor (
+export class InstallmentPlansService {
+  constructor(
     @InjectRepository(InstallmentPlan)
     private installmentPlansRepository: Repository<InstallmentPlan>,
     private dataSource: DataSource,
@@ -58,7 +66,7 @@ export class InstallmentPlansService {
             .orWhere('person.nick_name ILIKE :term', { term })
             .orWhere('person.phone_number ILIKE :term', { term })
             .orWhere('person.address ILIKE :term', { term })
-            .orWhere('person.profession ILIKE :term', { term })
+            .orWhere('person.profession ILIKE :term', { term });
         }),
       );
     }
@@ -83,7 +91,7 @@ export class InstallmentPlansService {
             .orWhere('person.nick_name ILIKE :term', { term })
             .orWhere('person.phone_number ILIKE :term', { term })
             .orWhere('person.address ILIKE :term', { term })
-            .orWhere('person.profession ILIKE :term', { term })
+            .orWhere('person.profession ILIKE :term', { term });
         }),
       );
     }
@@ -92,7 +100,10 @@ export class InstallmentPlansService {
     const items = await this.installmentPlansRepository
       .createQueryBuilder('installmentPlan')
       .leftJoinAndSelect('installmentPlan.client', 'client')
-      .leftJoinAndSelect('installmentPlan.installment_months', 'installment_months')
+      .leftJoinAndSelect(
+        'installmentPlan.installment_months',
+        'installment_months',
+      )
       .leftJoinAndSelect('client.person', 'person')
       .where(`installmentPlan.id IN (${idSubQuery.getQuery()})`)
       .setParameters(idSubQuery.getParameters())
@@ -115,14 +126,16 @@ export class InstallmentPlansService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-  
+
     try {
       const account = await queryRunner.manager.findOne(Account, {
         where: { id: accountId },
-        relations: { person: { admin: true } }
+        relations: { person: { admin: true } },
       });
       if (!account?.person?.admin) {
-        throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+        throw new NotFoundException(
+          `Admin associated with account ID ${accountId} not found`,
+        );
       }
       const admin = account.person.admin;
 
@@ -130,15 +143,19 @@ export class InstallmentPlansService {
         where: {
           id: createPlanDTO.client_id,
         },
-        relations: { person: true }
+        relations: { person: true },
       });
 
       if (!client) {
-        throw new NotFoundException(`Client with ID ${createPlanDTO.client_id} not found`);
+        throw new NotFoundException(
+          `Client with ID ${createPlanDTO.client_id} not found`,
+        );
       }
 
       // Update the client's total_paid_cash (down payment)
-      client.total_paid_cash = Big(client.total_paid_cash).add(createPlanDTO.down_payment).toNumber();
+      client.total_paid_cash = Big(client.total_paid_cash)
+        .add(createPlanDTO.down_payment)
+        .toNumber();
       await queryRunner.manager.save(Client, client);
 
       const installmentPlan = queryRunner.manager.create(InstallmentPlan, {
@@ -147,21 +164,29 @@ export class InstallmentPlansService {
       });
 
       if (createPlanDTO.total_amount) {
-        installmentPlan.total_amount = createPlanDTO.total_amount - createPlanDTO.down_payment;
+        installmentPlan.total_amount =
+          createPlanDTO.total_amount - createPlanDTO.down_payment;
       } else {
         // TODO: calculate total_amount based on createPlanDTO.items
       }
 
       // start_date here is the date of the first installment (not contract date)
-      let baseDueDate = createPlanDTO.start_date ? dayjs(createPlanDTO.start_date) : dayjs().add(1, 'month');
-      const expectedAmount = Big(installmentPlan.total_amount).div(createPlanDTO.duration_months);
-      const roundedExpectedAmount = expectedAmount.round(2, Big.roundHalfUp).toNumber();
+      let baseDueDate = createPlanDTO.start_date
+        ? dayjs(createPlanDTO.start_date)
+        : dayjs().add(1, 'month');
+      const expectedAmount = Big(installmentPlan.total_amount).div(
+        createPlanDTO.duration_months,
+      );
+      const roundedExpectedAmount = expectedAmount
+        .round(2, Big.roundHalfUp)
+        .toNumber();
 
       installmentPlan.start_date = new Date(createPlanDTO.start_date);
       installmentPlan.monthly_amount = expectedAmount.toNumber();
       installmentPlan.notes = createPlanDTO.notes;
-      
-      const savedInstallmentPlan = await queryRunner.manager.save(installmentPlan);
+
+      const savedInstallmentPlan =
+        await queryRunner.manager.save(installmentPlan);
 
       // Record the down payment as a transaction so it shows up in the dashboard/archive.
       if (createPlanDTO.down_payment > 0) {
@@ -169,7 +194,8 @@ export class InstallmentPlansService {
         downPaymentTransaction.admin = admin;
         downPaymentTransaction.amount = createPlanDTO.down_payment;
         downPaymentTransaction.installment_plan = savedInstallmentPlan;
-        downPaymentTransaction.payment_type = createPlanDTO.payment_type ?? PaymentType.Cash;
+        downPaymentTransaction.payment_type =
+          createPlanDTO.payment_type ?? PaymentType.Cash;
         await queryRunner.manager.save(downPaymentTransaction);
       }
 
@@ -179,7 +205,7 @@ export class InstallmentPlansService {
         const monthData: CreateInstallmentMonthDTO = {
           installment_plan_id: savedInstallmentPlan.id,
           due_date: calculatedDueDate,
-          expected_amount: roundedExpectedAmount
+          expected_amount: roundedExpectedAmount,
         };
         const installmentMonth = queryRunner.manager.create(InstallmentMonth, {
           due_date: monthData.due_date,
@@ -208,7 +234,6 @@ export class InstallmentPlansService {
       await queryRunner.commitTransaction();
 
       return savedInstallmentPlan;
-
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -221,20 +246,22 @@ export class InstallmentPlansService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    
+
     try {
       const account = await queryRunner.manager.findOne(Account, {
         where: {
-          id: accountId
+          id: accountId,
         },
         relations: {
           person: {
-            admin: true
-          }
-        }
+            admin: true,
+          },
+        },
       });
       if (!account?.person?.admin) {
-        throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+        throw new NotFoundException(
+          `Admin associated with account ID ${accountId} not found`,
+        );
       }
 
       const admin = account.person.admin;
@@ -242,55 +269,54 @@ export class InstallmentPlansService {
       const targetStatuses = [
         InstallmentMonthStatus.Pending,
         InstallmentMonthStatus.PartiallyPaid,
-        InstallmentMonthStatus.Overdue
+        InstallmentMonthStatus.Overdue,
       ];
 
       // Finds installmentPlan with the id, and embeds associated not fully paid (or overdue)
       // installment months in it.
       const installmentPlan = await queryRunner.manager
-        .createQueryBuilder(InstallmentPlan, "installmentPlan")
+        .createQueryBuilder(InstallmentPlan, 'installmentPlan')
         .leftJoinAndSelect(
-          "installmentPlan.installment_months", 
-          "installmentMonth",
-          "installmentMonth.status IN (:...statuses)",
-          { statuses: targetStatuses }
+          'installmentPlan.installment_months',
+          'installmentMonth',
+          'installmentMonth.status IN (:...statuses)',
+          { statuses: targetStatuses },
         )
-        .innerJoinAndSelect(
-          "installmentPlan.client",
-          "client"
-        )
-        .innerJoinAndSelect(
-          "client.person",
-          "person"
-        )
-        .where("installmentPlan.id = :id", { id: paymentDTO.installment_plan_id })
-        .orderBy("installmentMonth.due_date", "ASC")
+        .innerJoinAndSelect('installmentPlan.client', 'client')
+        .innerJoinAndSelect('client.person', 'person')
+        .where('installmentPlan.id = :id', {
+          id: paymentDTO.installment_plan_id,
+        })
+        .orderBy('installmentMonth.due_date', 'ASC')
         .getOne();
 
       if (!installmentPlan) {
-        throw new NotFoundException(`Installment Plan with ID ${paymentDTO.installment_plan_id} not found`);
+        throw new NotFoundException(
+          `Installment Plan with ID ${paymentDTO.installment_plan_id} not found`,
+        );
       }
 
       if (installmentPlan.installment_months.length === 0) {
-        throw new BadRequestException('There is no active months associated with this installment_plan, maybe the plan is already paid.');
+        throw new BadRequestException(
+          'There is no active months associated with this installment_plan, maybe the plan is already paid.',
+        );
       }
 
-      
       const toPayInstallmentMonth = installmentPlan.installment_months[0];
-      
+
       const expectedAmount = new Big(toPayInstallmentMonth.expected_amount);
       const currentPaid = new Big(toPayInstallmentMonth.paid_amount);
       const newPayment = new Big(paymentDTO.paid_amount);
 
       const totalAccumulatedPaid = currentPaid.plus(newPayment);
 
-      let newStatus: InstallmentMonthStatus;  // New month status after payment
+      let newStatus: InstallmentMonthStatus; // New month status after payment
 
       if (totalAccumulatedPaid.lt(expectedAmount)) {
         newStatus = InstallmentMonthStatus.PartiallyPaid;
       } else if (totalAccumulatedPaid.gt(expectedAmount)) {
         throw new BadRequestException(
-          `The payment of ${paymentDTO.paid_amount} EGP exceeds the remaining balance due for this installment month.`
+          `The payment of ${paymentDTO.paid_amount} EGP exceeds the remaining balance due for this installment month.`,
         );
       } else {
         newStatus = InstallmentMonthStatus.Paid;
@@ -301,9 +327,13 @@ export class InstallmentPlansService {
 
       await queryRunner.manager.save(InstallmentMonth, toPayInstallmentMonth);
 
-      // If it's the last month, then mark installmentPlan as PAID 
+      // If it's the last month, then mark installmentPlan as PAID
       if (installmentPlan.installment_months.length === 1) {
-        await queryRunner.manager.update(InstallmentPlan, { id: installmentPlan.id }, { status: InstallmentPlanStatus.Paid });
+        await queryRunner.manager.update(
+          InstallmentPlan,
+          { id: installmentPlan.id },
+          { status: InstallmentPlanStatus.Paid },
+        );
       }
 
       // Update client's total_paid_cash
@@ -332,7 +362,8 @@ export class InstallmentPlansService {
           admin,
           action: ActivityAction.PaymentRecorded,
           target_id: installmentPlan.id,
-          target_label: `${client.person.first_name} ${client.person.last_name}`.trim(),
+          target_label:
+            `${client.person.first_name} ${client.person.last_name}`.trim(),
           metadata: {
             amount: newPayment.toNumber(),
             payment_type: paymentDTO.payment_type,
@@ -348,7 +379,6 @@ export class InstallmentPlansService {
         message: 'Payment recorded successfully.',
         transaction: savedTransaction,
       };
-    
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -367,53 +397,62 @@ export class InstallmentPlansService {
     try {
       const account = await queryRunner.manager.findOne(Account, {
         where: { id: accountId },
-        relations: { person: { admin: true } }
+        relations: { person: { admin: true } },
       });
       if (!account?.person?.admin) {
-        throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+        throw new NotFoundException(
+          `Admin associated with account ID ${accountId} not found`,
+        );
       }
       const admin = account.person.admin;
 
       const lastTransaction = await queryRunner.manager.findOne(Transaction, {
         where: { installment_plan: { id: installmentPlanId } },
-        order: { created_at: 'DESC' }
+        order: { created_at: 'DESC' },
       });
 
       if (!lastTransaction) {
-        throw new BadRequestException('No transactions found for this installment plan to revert.');
+        throw new BadRequestException(
+          'No transactions found for this installment plan to revert.',
+        );
       }
 
       // Double reversal check.
       if (lastTransaction.amount < 0) {
-        throw new BadRequestException('The last transaction is already a reversal.');
+        throw new BadRequestException(
+          'The last transaction is already a reversal.',
+        );
       }
 
       const installmentPlan = await queryRunner.manager
-        .createQueryBuilder(InstallmentPlan, "installmentPlan")
-        .leftJoinAndSelect("installmentPlan.installment_months", "installmentMonth")
-        .innerJoinAndSelect(
-          "installmentPlan.client",
-          "client"
+        .createQueryBuilder(InstallmentPlan, 'installmentPlan')
+        .leftJoinAndSelect(
+          'installmentPlan.installment_months',
+          'installmentMonth',
         )
-        .innerJoinAndSelect(
-          "client.person",
-          "person"
-        )
-        .where("installmentPlan.id = :id", { id: installmentPlanId })
-        .orderBy("installmentMonth.due_date", "DESC")
+        .innerJoinAndSelect('installmentPlan.client', 'client')
+        .innerJoinAndSelect('client.person', 'person')
+        .where('installmentPlan.id = :id', { id: installmentPlanId })
+        .orderBy('installmentMonth.due_date', 'DESC')
         .getOne();
 
       if (!installmentPlan) {
-        throw new NotFoundException(`Installment Plan with ID ${installmentPlanId} not found`);
+        throw new NotFoundException(
+          `Installment Plan with ID ${installmentPlanId} not found`,
+        );
       }
 
       // Only paid or partially paid months
       const modifiedMonth = installmentPlan.installment_months.find(
-        month => month.status === InstallmentMonthStatus.Paid || month.status === InstallmentMonthStatus.PartiallyPaid
+        (month) =>
+          month.status === InstallmentMonthStatus.Paid ||
+          month.status === InstallmentMonthStatus.PartiallyPaid,
       );
 
       if (!modifiedMonth) {
-        throw new BadRequestException('No paid or partially paid months found to revert.');
+        throw new BadRequestException(
+          'No paid or partially paid months found to revert.',
+        );
       }
 
       const expectedAmount = new Big(modifiedMonth.expected_amount);
@@ -423,7 +462,9 @@ export class InstallmentPlansService {
       const totalAccumulatedPaid = currentPaid.minus(refundAmount);
 
       if (totalAccumulatedPaid.lt(0)) {
-        throw new BadRequestException('Invalid rollback state: accumulated paid amount cannot be negative.');
+        throw new BadRequestException(
+          'Invalid rollback state: accumulated paid amount cannot be negative.',
+        );
       }
 
       let newStatus: InstallmentMonthStatus;
@@ -431,8 +472,11 @@ export class InstallmentPlansService {
         // Overdue or pending
         const now = dayjs();
         const dueDate = dayjs(modifiedMonth.due_date);
-        newStatus = now.isAfter(dueDate) ? InstallmentMonthStatus.Overdue : InstallmentMonthStatus.Pending;
-      } else {  // this means totalAccumulatedPaid is larger than 0, thus it's PartiallyPaid
+        newStatus = now.isAfter(dueDate)
+          ? InstallmentMonthStatus.Overdue
+          : InstallmentMonthStatus.Pending;
+      } else {
+        // this means totalAccumulatedPaid is larger than 0, thus it's PartiallyPaid
         newStatus = InstallmentMonthStatus.PartiallyPaid;
       }
 
@@ -443,7 +487,11 @@ export class InstallmentPlansService {
 
       // If installmentPlan was PAID, we reopen it.
       if (installmentPlan.status === InstallmentPlanStatus.Paid) {
-        await queryRunner.manager.update(InstallmentPlan, { id: installmentPlan.id }, { status: InstallmentPlanStatus.Active });
+        await queryRunner.manager.update(
+          InstallmentPlan,
+          { id: installmentPlan.id },
+          { status: InstallmentPlanStatus.Active },
+        );
       }
 
       // Subtract refundAmount from client total_paid_cash
@@ -456,7 +504,7 @@ export class InstallmentPlansService {
 
       const reversalTransaction = queryRunner.manager.create(Transaction);
       reversalTransaction.admin = admin;
-      reversalTransaction.amount = refundAmount.times(-1).toNumber();  // Negative amount
+      reversalTransaction.amount = refundAmount.times(-1).toNumber(); // Negative amount
       reversalTransaction.installment_plan = installmentPlan;
       reversalTransaction.installment_month = modifiedMonth;
       reversalTransaction.payment_type = lastTransaction.payment_type;
@@ -468,7 +516,8 @@ export class InstallmentPlansService {
           admin,
           action: ActivityAction.PaymentReversed,
           target_id: installmentPlan.id,
-          target_label: `${client.person.first_name} ${client.person.last_name}`.trim(),
+          target_label:
+            `${client.person.first_name} ${client.person.last_name}`.trim(),
           metadata: {
             reversed_amount: refundAmount.toNumber(),
             installment_month_id: modifiedMonth.id,
@@ -483,7 +532,6 @@ export class InstallmentPlansService {
         message: 'Payment reversed successfully.',
         transaction: savedReversal,
       };
-
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -492,13 +540,21 @@ export class InstallmentPlansService {
     }
   }
 
-  async freeze(installmentPlanId: string, accountId: string): Promise<InstallmentPlan> {
-    const account = await this.installmentPlansRepository.manager.findOne(Account, {
-      where: { id: accountId },
-      relations: { person: { admin: true } },
-    });
+  async freeze(
+    installmentPlanId: string,
+    accountId: string,
+  ): Promise<InstallmentPlan> {
+    const account = await this.installmentPlansRepository.manager.findOne(
+      Account,
+      {
+        where: { id: accountId },
+        relations: { person: { admin: true } },
+      },
+    );
     if (!account?.person?.admin) {
-      throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+      throw new NotFoundException(
+        `Admin associated with account ID ${accountId} not found`,
+      );
     }
     const admin = account.person.admin;
 
@@ -508,7 +564,9 @@ export class InstallmentPlansService {
     });
 
     if (!installmentPlan) {
-      throw new NotFoundException(`InstallmentPlan with ID ${installmentPlanId} not found`);
+      throw new NotFoundException(
+        `InstallmentPlan with ID ${installmentPlanId} not found`,
+      );
     }
 
     if (installmentPlan.status === InstallmentPlanStatus.Paid) {
@@ -526,19 +584,28 @@ export class InstallmentPlansService {
       admin,
       action: ActivityAction.PlanFrozen,
       target_id: saved.id,
-      target_label: `${installmentPlan.client.person.first_name} ${installmentPlan.client.person.last_name}`.trim(),
+      target_label:
+        `${installmentPlan.client.person.first_name} ${installmentPlan.client.person.last_name}`.trim(),
     });
 
     return saved;
   }
 
-  async unfreeze(installmentPlanId: string, accountId: string): Promise<InstallmentPlan> {
-    const account = await this.installmentPlansRepository.manager.findOne(Account, {
-      where: { id: accountId },
-      relations: { person: { admin: true } },
-    });
+  async unfreeze(
+    installmentPlanId: string,
+    accountId: string,
+  ): Promise<InstallmentPlan> {
+    const account = await this.installmentPlansRepository.manager.findOne(
+      Account,
+      {
+        where: { id: accountId },
+        relations: { person: { admin: true } },
+      },
+    );
     if (!account?.person?.admin) {
-      throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+      throw new NotFoundException(
+        `Admin associated with account ID ${accountId} not found`,
+      );
     }
     const admin = account.person.admin;
 
@@ -548,7 +615,9 @@ export class InstallmentPlansService {
     });
 
     if (!installmentPlan) {
-      throw new NotFoundException(`InstallmentPlan with ID ${installmentPlanId} not found`);
+      throw new NotFoundException(
+        `InstallmentPlan with ID ${installmentPlanId} not found`,
+      );
     }
 
     installmentPlan.status = InstallmentPlanStatus.Active;
@@ -558,19 +627,29 @@ export class InstallmentPlansService {
       admin,
       action: ActivityAction.PlanUnfrozen,
       target_id: saved.id,
-      target_label: `${installmentPlan.client.person.first_name} ${installmentPlan.client.person.last_name}`.trim(),
+      target_label:
+        `${installmentPlan.client.person.first_name} ${installmentPlan.client.person.last_name}`.trim(),
     });
 
     return saved;
   }
 
-  async updateNotes(installmentPlanId: string, notes: string, accountId: string): Promise<InstallmentPlan> {
-    const account = await this.installmentPlansRepository.manager.findOne(Account, {
-      where: { id: accountId },
-      relations: { person: { admin: true } },
-    });
+  async updateNotes(
+    installmentPlanId: string,
+    notes: string,
+    accountId: string,
+  ): Promise<InstallmentPlan> {
+    const account = await this.installmentPlansRepository.manager.findOne(
+      Account,
+      {
+        where: { id: accountId },
+        relations: { person: { admin: true } },
+      },
+    );
     if (!account?.person?.admin) {
-      throw new NotFoundException(`Admin associated with account ID ${accountId} not found`);
+      throw new NotFoundException(
+        `Admin associated with account ID ${accountId} not found`,
+      );
     }
     const admin = account.person.admin;
 
@@ -580,7 +659,9 @@ export class InstallmentPlansService {
     });
 
     if (!installmentPlan) {
-      throw new NotFoundException(`InstallmentPlan with ID ${installmentPlanId} not found`);
+      throw new NotFoundException(
+        `InstallmentPlan with ID ${installmentPlanId} not found`,
+      );
     }
 
     const previousNotes = installmentPlan.notes;
@@ -591,7 +672,8 @@ export class InstallmentPlansService {
       admin,
       action: ActivityAction.PlanNotesUpdated,
       target_id: saved.id,
-      target_label: `${installmentPlan.client.person.first_name} ${installmentPlan.client.person.last_name}`.trim(),
+      target_label:
+        `${installmentPlan.client.person.first_name} ${installmentPlan.client.person.last_name}`.trim(),
       metadata: { previous_notes: previousNotes, new_notes: notes },
     });
 

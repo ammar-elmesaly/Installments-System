@@ -6,11 +6,11 @@ import { AdminLevel } from '../admins/enums/adminLevel.enum';
 
 @Controller('fallback-contacts')
 export class FallbackContactsController {
-  constructor (private falllbackContactsService: FallbackContactsService) {}
+  constructor(private falllbackContactsService: FallbackContactsService) {}
 
   @Post('new')
   @MinAdminLevel(AdminLevel.Collector)
-  create(@Body() createFallbackContactDTO: CreateFallbackContactDTO) {  
+  create(@Body() createFallbackContactDTO: CreateFallbackContactDTO) {
     return this.falllbackContactsService.create(createFallbackContactDTO);
   }
 }

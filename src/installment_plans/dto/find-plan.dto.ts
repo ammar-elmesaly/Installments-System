@@ -1,6 +1,6 @@
-import { Type } from "class-transformer";
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
-import { InstallmentPlanStatus } from "../enums/installmentPlanStatus.enum";
+import { Type } from 'class-transformer';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { InstallmentPlanStatus } from '../enums/installmentPlanStatus.enum';
 
 export class FindPlansDto {
   @IsOptional()

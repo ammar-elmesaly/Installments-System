@@ -40,7 +40,9 @@ describe('AdminsService', () => {
     repository.find.mockResolvedValue(admins);
 
     await expect(service.findAll()).resolves.toBe(admins);
-    expect(repository.find).toHaveBeenCalledWith({ relations: { person: true } });
+    expect(repository.find).toHaveBeenCalledWith({
+      relations: { person: true },
+    });
   });
 
   it('finds an admin by id and throws when it does not exist', async () => {
@@ -48,7 +50,9 @@ describe('AdminsService', () => {
     repository.findOne.mockResolvedValueOnce(admin).mockResolvedValueOnce(null);
 
     await expect(service.findById(admin.id)).resolves.toBe(admin);
-    await expect(service.findById(admin.id)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.findById(admin.id)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('creates an admin in a local transaction', async () => {
@@ -56,8 +60,12 @@ describe('AdminsService', () => {
     const person = { id: 'person-id' } as Person;
     const admin = { id: 'admin-id', person } as Admin;
     queryRunner.manager.findOne.mockResolvedValue(null);
-    queryRunner.manager.create.mockReturnValueOnce(person).mockReturnValueOnce(admin);
-    queryRunner.manager.save.mockResolvedValueOnce(person).mockResolvedValueOnce(admin);
+    queryRunner.manager.create
+      .mockReturnValueOnce(person)
+      .mockReturnValueOnce(admin);
+    queryRunner.manager.save
+      .mockResolvedValueOnce(person)
+      .mockResolvedValueOnce(admin);
     queryRunner.isTransactionActive = false;
     dataSource.createQueryRunner.mockReturnValue(queryRunner);
 
@@ -70,11 +78,15 @@ describe('AdminsService', () => {
 
   it('rejects duplicate admin phone numbers', async () => {
     const queryRunner = createQueryRunner();
-    queryRunner.manager.findOne.mockResolvedValue({ phone_number: '01000000000' });
+    queryRunner.manager.findOne.mockResolvedValue({
+      phone_number: '01000000000',
+    });
     queryRunner.isTransactionActive = false;
     dataSource.createQueryRunner.mockReturnValue(queryRunner);
 
-    await expect(service.create(createAdminDTO())).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.create(createAdminDTO())).rejects.toBeInstanceOf(
+      ConflictException,
+    );
     expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
     expect(queryRunner.release).toHaveBeenCalled();
   });
@@ -86,12 +98,20 @@ describe('AdminsService', () => {
     queryRunner.manager.save.mockResolvedValue(admin);
     dataSource.createQueryRunner.mockReturnValue(queryRunner);
 
-    await expect(service.updateById(admin.id, {
-      first_name: 'Updated',
+    await expect(
+      service.updateById(admin.id, {
+        first_name: 'Updated',
+        admin_level: AdminLevel.SuperAdmin,
+      }),
+    ).resolves.toBe(admin);
+    expect(queryRunner.manager.merge).toHaveBeenCalledWith(
+      Person,
+      admin.person,
+      { first_name: 'Updated' },
+    );
+    expect(queryRunner.manager.merge).toHaveBeenCalledWith(Admin, admin, {
       admin_level: AdminLevel.SuperAdmin,
-    })).resolves.toBe(admin);
-    expect(queryRunner.manager.merge).toHaveBeenCalledWith(Person, admin.person, { first_name: 'Updated' });
-    expect(queryRunner.manager.merge).toHaveBeenCalledWith(Admin, admin, { admin_level: AdminLevel.SuperAdmin });
+    });
     expect(queryRunner.commitTransaction).toHaveBeenCalled();
   });
 
@@ -100,19 +120,27 @@ describe('AdminsService', () => {
     queryRunner.manager.findOne.mockResolvedValue(null);
     dataSource.createQueryRunner.mockReturnValue(queryRunner);
 
-    await expect(service.updateById('missing-id', {})).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.updateById('missing-id', {})).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
     expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
 
     const manager = { getRepository: jest.fn() };
-    manager.getRepository.mockReturnValue({ findOne: jest.fn().mockResolvedValue(null) });
-    await expect(service.deleteById('missing-id', manager)).rejects.toBeInstanceOf(NotFoundException);
+    manager.getRepository.mockReturnValue({
+      findOne: jest.fn().mockResolvedValue(null),
+    });
+    await expect(
+      service.deleteById('missing-id', manager),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('removes the person belonging to an admin', async () => {
     const person = { id: 'person-id' } as Person;
     const remove = jest.fn().mockResolvedValue(person);
     const manager = { getRepository: jest.fn() };
-    manager.getRepository.mockReturnValueOnce({ findOne: jest.fn().mockResolvedValue({ person }) });
+    manager.getRepository.mockReturnValueOnce({
+      findOne: jest.fn().mockResolvedValue({ person }),
+    });
     manager.getRepository.mockReturnValueOnce({ remove });
 
     await expect(service.deleteById('admin-id', manager)).resolves.toBe(person);

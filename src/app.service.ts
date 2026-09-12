@@ -14,11 +14,11 @@ dayjs.extend(timezone);
 
 @Injectable()
 export class AppService {
-  constructor (
+  constructor(
     private readonly dataSource: DataSource,
-    private readonly telegramService: TelegramService
+    private readonly telegramService: TelegramService,
   ) {}
-  
+
   async handleDailyOverdueCheck() {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -29,14 +29,17 @@ export class AppService {
 
       const overdueMonths = await queryRunner.manager.find(InstallmentMonth, {
         where: {
-          status: In([InstallmentMonthStatus.Pending, InstallmentMonthStatus.PartiallyPaid]),
+          status: In([
+            InstallmentMonthStatus.Pending,
+            InstallmentMonthStatus.PartiallyPaid,
+          ]),
           installment_plan: { status: InstallmentPlanStatus.Active },
           due_date: LessThan(today),
         },
         relations: {
           installment_plan: {
             client: {
-              person: true
+              person: true,
             },
           },
         },
@@ -49,18 +52,27 @@ export class AppService {
         return { message: 'No overdue installments found.' };
       }
 
-      const idsToUpdate = overdueMonths.map(m => m.id);
+      const idsToUpdate = overdueMonths.map((m) => m.id);
       await queryRunner.manager.update(InstallmentMonth, idsToUpdate, {
-        status: InstallmentMonthStatus.Overdue,  // Set all PENDING months to OVERDUE
+        status: InstallmentMonthStatus.Overdue, // Set all PENDING months to OVERDUE
       });
 
       let telegramMessage = `⚠️ *تقرير الأقساط المتأخرة اليوم (${dayjs().format('YYYY-MM-DD')}):*\n\n`;
-      
+
       overdueMonths.forEach((month, index) => {
         const person = month.installment_plan.client.person;
-        const clientName = person.first_name + ' ' + person.second_name + ' ' + person.third_name + ' ' + person.last_name;
+        const clientName =
+          person.first_name +
+          ' ' +
+          person.second_name +
+          ' ' +
+          person.third_name +
+          ' ' +
+          person.last_name;
         const phone = person.phone_number;
-        const remaining = new Big(month.expected_amount).minus(new Big(month.paid_amount)).toNumber();
+        const remaining = new Big(month.expected_amount)
+          .minus(new Big(month.paid_amount))
+          .toNumber();
 
         telegramMessage += `${index + 1}. *العميل:* ${clientName}\n`;
         telegramMessage += `   *رقم الهاتف:* ${phone}\n`;
@@ -72,10 +84,11 @@ export class AppService {
 
       await queryRunner.commitTransaction();
       return { status: 'Success', updatedCount: overdueMonths.length };
-
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      await this.telegramService.sendAdminNotification('🚨 *خطأ فادح:* فشل تحديث الأقساط المتأخرة الليلة، يرجى فحص الـ Logs!');
+      await this.telegramService.sendAdminNotification(
+        '🚨 *خطأ فادح:* فشل تحديث الأقساط المتأخرة الليلة، يرجى فحص الـ Logs!',
+      );
       throw error;
     } finally {
       await queryRunner.release();

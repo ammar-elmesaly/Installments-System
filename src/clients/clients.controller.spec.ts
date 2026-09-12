@@ -30,14 +30,19 @@ describe('ClientsController', () => {
   });
 
   it('delegates findAll with pagination and search params', () => {
-    const query = { page: 2, limit: 20, status: ClientStatus.Active, search: 'john' };
+    const query = {
+      page: 2,
+      limit: 20,
+      status: ClientStatus.Active,
+      search: 'john',
+    };
 
     controller.findAll(query as any);
 
     expect(service.paginate).toHaveBeenCalledWith(
       { page: 2, limit: 20 },
       ClientStatus.Active,
-      'john'
+      'john',
     );
   });
 
@@ -50,7 +55,11 @@ describe('ClientsController', () => {
   });
 
   it('delegates client creation with account id', () => {
-    const dto = { first_name: 'John', last_name: 'Doe', phone_number: '01234567890' } as any;
+    const dto = {
+      first_name: 'John',
+      last_name: 'Doe',
+      phone_number: '01234567890',
+    } as any;
     const req = { user: { id: 'account-id' } };
 
     controller.create(dto, req);

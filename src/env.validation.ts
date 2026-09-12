@@ -1,6 +1,6 @@
 enum Environment {
   Production = 'production',
-  Development = 'development'
+  Development = 'development',
 }
 
 export class EnvironmentVariables {
@@ -33,7 +33,9 @@ export function validate(config: Record<string, unknown>) {
   const getString = (key: string) => {
     const value = config[key];
 
-    return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+    return typeof value === 'string' && value.trim().length > 0
+      ? value
+      : undefined;
   };
 
   const requireString = (key: string) => {
@@ -58,7 +60,11 @@ export function validate(config: Record<string, unknown>) {
 
   const nodeEnv = requireString('NODE_ENV');
 
-  if (nodeEnv && nodeEnv !== Environment.Production && nodeEnv !== Environment.Development) {
+  if (
+    nodeEnv &&
+    nodeEnv !== Environment.Production &&
+    nodeEnv !== Environment.Development
+  ) {
     errors.push('NODE_ENV must be either production or development');
   }
 
@@ -70,12 +76,24 @@ export function validate(config: Record<string, unknown>) {
   validatedConfig.TELEGRAM_BOT_TOKEN = getString('TELEGRAM_BOT_TOKEN');
   validatedConfig.TELEGRAM_ADMIN_CHAT_ID = getString('TELEGRAM_ADMIN_CHAT_ID');
   validatedConfig.SEED_SUPER_ADMIN_EMAIL = getString('SEED_SUPER_ADMIN_EMAIL');
-  validatedConfig.SEED_SUPER_ADMIN_PASSWORD = getString('SEED_SUPER_ADMIN_PASSWORD');
-  validatedConfig.SEED_SUPER_ADMIN_FIRST_NAME = getString('SEED_SUPER_ADMIN_FIRST_NAME');
-  validatedConfig.SEED_SUPER_ADMIN_SECOND_NAME = getString('SEED_SUPER_ADMIN_SECOND_NAME');
-  validatedConfig.SEED_SUPER_ADMIN_THIRD_NAME = getString('SEED_SUPER_ADMIN_THIRD_NAME');
-  validatedConfig.SEED_SUPER_ADMIN_LAST_NAME = getString('SEED_SUPER_ADMIN_LAST_NAME');
-  validatedConfig.SEED_SUPER_ADMIN_PHONE_NUMBER = getString('SEED_SUPER_ADMIN_PHONE_NUMBER');
+  validatedConfig.SEED_SUPER_ADMIN_PASSWORD = getString(
+    'SEED_SUPER_ADMIN_PASSWORD',
+  );
+  validatedConfig.SEED_SUPER_ADMIN_FIRST_NAME = getString(
+    'SEED_SUPER_ADMIN_FIRST_NAME',
+  );
+  validatedConfig.SEED_SUPER_ADMIN_SECOND_NAME = getString(
+    'SEED_SUPER_ADMIN_SECOND_NAME',
+  );
+  validatedConfig.SEED_SUPER_ADMIN_THIRD_NAME = getString(
+    'SEED_SUPER_ADMIN_THIRD_NAME',
+  );
+  validatedConfig.SEED_SUPER_ADMIN_LAST_NAME = getString(
+    'SEED_SUPER_ADMIN_LAST_NAME',
+  );
+  validatedConfig.SEED_SUPER_ADMIN_PHONE_NUMBER = getString(
+    'SEED_SUPER_ADMIN_PHONE_NUMBER',
+  );
 
   if (!validatedConfig.DB_URL) {
     validatedConfig.DB_HOST = requireString('DB_HOST');

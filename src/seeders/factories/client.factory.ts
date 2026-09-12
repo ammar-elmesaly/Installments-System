@@ -11,7 +11,7 @@ const firstNames = [
   'إبراهيم',
   'مروة',
   'مريم',
-  'مازن'
+  'مازن',
 ];
 
 const secondNames = [
@@ -63,7 +63,9 @@ export interface GeneratedClient {
 }
 
 function toArabicDigits(value: number): string {
-  return value.toString().replace(/[0-9]/g, digit => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
+  return value
+    .toString()
+    .replace(/[0-9]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
 }
 
 export function createArabicClient(index: number): GeneratedClient {
